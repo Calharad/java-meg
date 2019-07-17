@@ -16,12 +16,13 @@ import java.time.LocalTime;
 public class SimulationBaseConfig {
     
     public static SimulationBaseConfig restartConfig(SimulationBaseConfig config) {
-        config.cycleInterval = new Interval(1500, 2500);
-        config.interval = new Interval(3600, 3600);
+        config.cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);
+        config.interval = new Interval(3600, 3600, Interval.TimeUnit.SECOND);
         config.machineId = -1;
         config.machineUsage = 0.5F;
         config.startTime = LocalTime.of(8, 0);
         config.stopTime = LocalTime.of(16, 0);
+        config.cycleBreak = 0;
         return config;
     }
     
@@ -31,9 +32,11 @@ public class SimulationBaseConfig {
 
     private int machineId = -1;
 
-    private Interval cycleInterval = new Interval(1500, 2500);
+    private Interval cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);
 
-    private Interval interval = new Interval(3600, 3600);
+    private Interval interval = new Interval(3600, 3600, Interval.TimeUnit.SECOND);
+    
+    private int cycleBreak = 0;
 
     private float machineUsage = 0.5F;
     
@@ -41,12 +44,13 @@ public class SimulationBaseConfig {
         setStartTime(config.getStartTime());
         setStopTime(config.getStopTime());
         setCycleInterval(new Interval(config.getCycleTime() - config.getCycleInterval(), 
-                config.getCycleTime() + config.getCycleInterval()));
+                config.getCycleTime() + config.getCycleInterval(), Interval.TimeUnit.MILIS));
         setMachineId(config.getMachine());
         if(config.getMinInterval() != null)
-            setInterval(new Interval(config.getMinInterval(), config.getMaxInterval()));
-        else setInterval(new Interval(config.getMaxInterval()));
+            setInterval(new Interval(config.getMinInterval(), config.getMaxInterval(), Interval.TimeUnit.SECOND));
+        else setInterval(new Interval(config.getMaxInterval(), Interval.TimeUnit.SECOND));
         setMachineUsage(config.getMachineUsage());
+        setCycleBreak(config.getCycleBreak());
     }
 
     //<editor-fold defaultstate="collapsed" desc="Getters/Setters">
@@ -56,6 +60,14 @@ public class SimulationBaseConfig {
 
     public void setStartTime(String time) {
         startTime = LocalTime.parse(time);
+    }
+
+    public int getCycleBreak() {
+        return cycleBreak;
+    }
+
+    public void setCycleBreak(int cycleBreak) {
+        this.cycleBreak = cycleBreak;
     }
 
     public LocalTime getStopTime() {
@@ -104,12 +116,12 @@ public class SimulationBaseConfig {
     @Override
     public String toString() {
         return "Simulation config:\n"
-                + "Start Time: " + startTime.toString() + "\n"
-                + "End Time: " + stopTime.toString() + "\n"
-                + "Assigned machine id: " + machineId + "\n"
-                + "Production interval: \n" + interval.toString() + "\n"
-                + "Cycle interval: \n" + cycleInterval.toString() + "\n"
-                + "Usage: " + machineUsage + "\n"; //To change body of generated methods, choose Tools | Templates.
+                + "\t\tStart Time: " + startTime.toString() + "\n"
+                + "\t\tEnd Time: " + stopTime.toString() + "\n"
+                + "\t\tAssigned machine id: " + machineId + "\n"
+                + "\t\tProduction interval: \n" + interval.toString() + "\n"
+                + "\t\tCycle interval: \n" + cycleInterval.toString() + "\n"
+                + "\t\tUsage: " + machineUsage + "\n"; //To change body of generated methods, choose Tools | Templates.
     }
     
     

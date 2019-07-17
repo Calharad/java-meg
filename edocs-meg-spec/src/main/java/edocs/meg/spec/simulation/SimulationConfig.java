@@ -19,6 +19,8 @@ public class SimulationConfig {
     
     private Integer cycleInterval;
     
+    private Integer cycleBreak;
+    
     private Float machineUsage;
     
     private Integer minInterval;
@@ -26,6 +28,14 @@ public class SimulationConfig {
     private Integer maxInterval;
     
     private Integer machine;
+
+    public Integer getCycleBreak() {
+        return cycleBreak;
+    }
+
+    public void setCycleBreak(Integer cycleBreak) {
+        this.cycleBreak = cycleBreak;
+    }
 
     public String getStartTime() {
         return startTime;

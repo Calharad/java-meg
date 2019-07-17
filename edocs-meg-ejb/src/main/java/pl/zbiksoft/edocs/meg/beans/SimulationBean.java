@@ -135,7 +135,7 @@ public class SimulationBean implements SimulationBeanRemote {
 
     private void startSimulation() {
         state = MachineState.STOP;
-        handleState();
+        handleStateChange();
         LOG.log(Level.INFO, "Simulation started at {0}", LocalDateTime.now().toString());
 
     }
@@ -147,10 +147,13 @@ public class SimulationBean implements SimulationBeanRemote {
                 startSimulation();
                 break;
             case MANAGE_PRODUCTION:
-                handleState();
+                handleStateChange();
                 break;
             case CYCLE:
                 finishCycle();
+                break;
+            case CYCLE_BREAK:
+                startCycle();
                 break;
         }
     }
@@ -159,8 +162,11 @@ public class SimulationBean implements SimulationBeanRemote {
         eventLogBean.saveEvent(config.getMachineId(), MACHINE_PIECE_PRODUCED);
         eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_STOP);
         if (productionFinished) {
-            handleState();
-        } else {
+            handleStateChange();
+        } else if (config.getCycleBreak() > 0){
+            cycleTimer = service.createTimer(config.getCycleBreak(), TimerMode.CYCLE_BREAK);
+        }
+        else {
             startCycle();
         }
     }
@@ -170,7 +176,7 @@ public class SimulationBean implements SimulationBeanRemote {
         eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_START);
     }
 
-    private void handleState() {
+    private void handleStateChange() {
         switch (state) {
             case STOP:
                 state = MachineState.RUN;
@@ -233,7 +239,8 @@ public class SimulationBean implements SimulationBeanRemote {
     private enum TimerMode {
         START_PRODUCTION,
         MANAGE_PRODUCTION,
-        CYCLE
+        CYCLE,
+        CYCLE_BREAK
     }
 
 }

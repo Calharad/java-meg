@@ -19,12 +19,16 @@ public class Interval {
     
     private final Random random = new Random();
     
-    public Interval(int max) {
+    private final TimeUnit timeUnit;
+    
+    public Interval(int max, TimeUnit tu) {
+        timeUnit = tu;
         min = 0;
         this.max = max;
     }
 
-    public Interval(int min, int max) {
+    public Interval(int min, int max, TimeUnit tu) {
+        timeUnit = tu;
         this.min = min;
         this.max = max;
     }
@@ -33,6 +37,10 @@ public class Interval {
         if(min < max) return random.nextInt(max - min) + min;
         else if(min == max) return min;
         else return null;
+    }
+
+    public TimeUnit getTimeUnit() {
+        return timeUnit;
     }
 
     public int getMin() {
@@ -45,9 +53,20 @@ public class Interval {
 
     @Override
     public String toString() {
-        return "Min value: " + min + "\n"
-                + "Max value " + max + "\n"; //To change body of generated methods, choose Tools | Templates.
+        return "Min value: " + min + timeUnit.symbol + "\n"
+                + "Max value " + max + timeUnit.symbol + "\n"; //To change body of generated methods, choose Tools | Templates.
     }
     
-    
+    public static enum TimeUnit {
+        SECOND("s"),
+        MINUTE("min"),
+        HOUR("h"),
+        MILIS("ms");
+        
+        public String symbol;
+
+        private TimeUnit(String symbol) {
+            this.symbol = symbol;
+        }
+    }
 }

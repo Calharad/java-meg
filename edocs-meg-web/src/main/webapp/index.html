@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Start Page</title>
+        <title>Simulator</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <style>
             body * {
@@ -36,6 +36,7 @@
         Cycle: <br/>
         <p class="tab">Average time (ms): <input type="text" value="2000" id="avgCycle"/></p><br/>
         <p class="tab">Time interval (ms): <input type="text" value="500" id="cycleInterval"/></p><br/>
+        <p class="tab">Break between cycles (ms): <input type="text" value="1000" id="cycleBreak"/></p><br/>
         Production Interval (secs):<br/>
         <p class="tab">Min: <input type="text" value="3600" id="minInterval"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
@@ -51,17 +52,6 @@
 
         <script>
 
-//            const EVENT_PRODUCTION_START = 2000;
-//            const EVENT_PRODUCTION_STOP = 2001;
-//            
-//            const MACHINE_PIECE_PRODUCED = 1020;
-//            
-//            const START_RECORDER = 21;
-//            const STOP_RECORDER = 22;
-//            
-//            const MACHINE_CYCLE_START = 1021;
-//            const MACHINE_CYCLE_STOP = 1022;
-
             var machineSelect = document.getElementById("machines");
             var eventSelect = document.getElementById("events");
             var startInput = document.getElementById("startTime");
@@ -69,6 +59,7 @@
             var usageInput = document.getElementById("usage");
             var cycleTimeInput = document.getElementById("avgCycle");
             var intervalTimeInput = document.getElementById("cycleInterval");
+            var cycleBreakInput = document.getElementById("cycleBreak");
             var minInput = document.getElementById("minInterval");
             var maxInput = document.getElementById("maxInterval");
 
@@ -101,7 +92,6 @@
 
             function updateHTML(type, content) {
                 var jsonContent = JSON.parse(content);
-                console.log(jsonContent);
                 switch (type) {
                     case "machine":
                         jsonContent.forEach(m => putOption(machineSelect, m.id, m.objectName));
@@ -120,7 +110,7 @@
                         updateHTML(type, xmlHttp.responseText);
                     }
                 };
-                xmlHttp.open("GET", myUrl, true); // false for synchronous request
+                xmlHttp.open("GET", myUrl, false); // false for synchronous request
                 xmlHttp.send(null);
                 return xmlHttp.responseText;
             }
@@ -142,24 +132,28 @@
                 var usage = usageInput.value;
                 var cycleTime = cycleTimeInput.value;
                 var cycleInterval = intervalTimeInput.value;
+                var cycleBreak = cycleBreakInput.value;
                 var min = minInput.value;
                 var max = maxInput.value;
 
-                if (startTime !== "" && endTime !== "" && usage !== "" && cycleTime !== "" && min !== "" && max !== "") {
+                if (startTime !== "" && endTime !== "" && usage !== "" && cycleTime !== "" && min !== "" && max !== ""
+                        && cycleInterval !== "" && cycleBreak !== "") {
                     var minValue = parseInt(min);
                     var maxValue = parseInt(max);
                     var usageValue = parseFloat(usage);
                     var cycleTimeValue = parseInt(cycleTime);
                     var cycleIntervalValue = parseInt(cycleInterval);
+                    var cycleBreakValue = parseInt(cycleBreak);
                     if (minValue > 0 && maxValue > 0 && minValue < maxValue && usageValue >= 0.0 
                             && usageValue <= 1.0 && cycleTimeValue > 0 && cycleIntervalValue > 0
-                            && cycleTimeValue > cycleIntervalValue
+                            && cycleTimeValue > cycleIntervalValue && cycleBreakValue >= 0
                             && cycleTimeValue + cycleIntervalValue < maxValue*1000 / 2) {
                         return {
                             startTime: startTime,
                             stopTime: endTime,
                             cycleTime: cycleTimeValue,
                             cycleInterval: cycleIntervalValue,
+                            cycleBreak: cycleBreakValue,
                             machineUsage: usage,
                             minInterval: min,
                             maxInterval: max,
@@ -181,8 +175,8 @@
                 xmlHttp.send(null);
             }
 
-            var machineList = httpGet("http://localhost:8080/edocs-meg-web/rest/machine/list", "machine");
-            var eventList = httpGet("http://localhost:8080/edocs-meg-web/rest/event/type-list", "event");
+            var machineList = JSON.parse(httpGet("http://localhost:8080/edocs-meg-web/rest/machine/list", "machine"));
+            var eventList = JSON.parse(httpGet("http://localhost:8080/edocs-meg-web/rest/event/type-list", "event"));
 
         </script>
 
