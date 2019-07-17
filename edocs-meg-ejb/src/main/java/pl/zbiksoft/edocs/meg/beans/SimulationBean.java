@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +24,7 @@ import javax.ejb.TimerService;
 import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
 import pl.zbiksoft.edocs.meg.util.MachineState;
+import pl.zbiksoft.edocs.meg.util.StopWatch;
 
 /**
  *
@@ -55,7 +55,14 @@ public class SimulationBean implements SimulationBeanRemote {
 
     private final SimulationBaseConfig config = new SimulationBaseConfig();
 
+    private Timer cycleTimer;
+
     private Timer baseTimer;
+
+    private final StopWatch watch = new StopWatch();
+
+    //check whether baseTimer has ended production
+    private boolean productionFinished = false;
 
     //if STOP, baseTimer represents time to start production
     //if RUN, production has started
@@ -103,8 +110,14 @@ public class SimulationBean implements SimulationBeanRemote {
         if (baseTimer != null) {
             baseTimer.cancel();
         }
+        if (cycleTimer != null) {
+            cycleTimer.cancel();
+        }
         productionTime = 0;
-        eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_STOP);
+        if (state == MachineState.RUN) {
+            eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_STOP);
+            eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_STOP);
+        }
         eventLogBean.saveEvent(config.getMachineId(), STOP_RECORDER);
         SimulationBaseConfig.restartConfig(config);
         state = MachineState.STOP;
@@ -127,7 +140,25 @@ public class SimulationBean implements SimulationBeanRemote {
             case MANAGE_PRODUCTION:
                 handleState();
                 break;
+            case CYCLE:
+                finishCycle();
+                break;
         }
+    }
+
+    private void finishCycle() {
+        eventLogBean.saveEvent(config.getMachineId(), MACHINE_PIECE_PRODUCED);
+        eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_STOP);
+        if (productionFinished) {
+            handleState();
+        } else {
+            startCycle();
+        }
+    }
+
+    private void startCycle() {
+        cycleTimer = service.createTimer(config.getCycleInterval().getValue(), TimerMode.CYCLE);
+        eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_START);
     }
 
     private void handleState() {
@@ -138,6 +169,7 @@ public class SimulationBean implements SimulationBeanRemote {
                 productionTime = config.getInterval().getValue() * 1000;
                 baseTimer = service.createTimer(productionTime, TimerMode.MANAGE_PRODUCTION);
                 eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_START);
+                startCycle();
                 break;
             case PAUSE:
                 if (LocalTime.now().isAfter(config.getStopTime())) {
@@ -150,15 +182,23 @@ public class SimulationBean implements SimulationBeanRemote {
                     productionTime = config.getInterval().getValue() * 1000;
                     baseTimer = service.createTimer(productionTime, TimerMode.MANAGE_PRODUCTION);
                     eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_START);
+                    startCycle();
                 }
                 break;
             case RUN:
-                state = MachineState.PAUSE;
-                float usage = config.getMachineUsage();
-                baseTimer = service
-                        .createTimer((long) ((productionTime - productionTime * usage)/usage),
-                                TimerMode.MANAGE_PRODUCTION);
-                eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_STOP);
+                if (!productionFinished) {
+                    productionFinished = true;
+                    watch.start();
+                } else {
+                    watch.stop();
+                    productionFinished = false;
+                    state = MachineState.PAUSE;
+                    float usage = config.getMachineUsage();
+                    baseTimer = service
+                            .createTimer((long) ((productionTime + watch.getElapsedTime() - (productionTime + watch.getElapsedTime()) * usage) / usage),
+                                    TimerMode.MANAGE_PRODUCTION);
+                    eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_STOP);
+                }
                 break;
         }
     }
@@ -183,7 +223,8 @@ public class SimulationBean implements SimulationBeanRemote {
     // "Insert Code > Add Business Method")
     private enum TimerMode {
         START_PRODUCTION,
-        MANAGE_PRODUCTION
+        MANAGE_PRODUCTION,
+        CYCLE
     }
 
 }

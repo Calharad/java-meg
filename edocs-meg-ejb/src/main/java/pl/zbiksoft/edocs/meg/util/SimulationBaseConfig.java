@@ -16,7 +16,7 @@ import java.time.LocalTime;
 public class SimulationBaseConfig {
     
     public static SimulationBaseConfig restartConfig(SimulationBaseConfig config) {
-        config.cycleCount = 0;
+        config.cycleInterval = new Interval(1500, 2500);
         config.interval = new Interval(3600, 3600);
         config.machineId = -1;
         config.machineUsage = 0.5F;
@@ -31,7 +31,7 @@ public class SimulationBaseConfig {
 
     private int machineId = -1;
 
-    private int cycleCount = 1;
+    private Interval cycleInterval = new Interval(1500, 2500);
 
     private Interval interval = new Interval(3600, 3600);
 
@@ -40,7 +40,8 @@ public class SimulationBaseConfig {
     public void updateConfig(SimulationConfig config) {
         setStartTime(config.getStartTime());
         setStopTime(config.getStopTime());
-        setCycleCount(config.getCycleCount());
+        setCycleInterval(new Interval(config.getCycleTime() - config.getCycleInterval(), 
+                config.getCycleTime() + config.getCycleInterval()));
         setMachineId(config.getMachine());
         if(config.getMinInterval() != null)
             setInterval(new Interval(config.getMinInterval(), config.getMaxInterval()));
@@ -73,15 +74,12 @@ public class SimulationBaseConfig {
         this.machineId = machineId;
     }
 
-
-    public int getCycleCount() {
-        return cycleCount;
+    public Interval getCycleInterval() {
+        return cycleInterval;
     }
 
-    public void setCycleCount(int cycleCount) {
-        if (cycleCount >= 0) {
-            this.cycleCount = cycleCount;
-        }
+    public void setCycleInterval(Interval cycleInterval) {
+        this.cycleInterval = cycleInterval;
     }
 
     public Interval getInterval() {

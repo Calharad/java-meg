@@ -15,7 +15,9 @@ public class SimulationConfig {
     
     private String stopTime;
     
-    private Integer cycleCount;
+    private Integer cycleTime;
+    
+    private Integer cycleInterval;
     
     private Float machineUsage;
     
@@ -41,12 +43,20 @@ public class SimulationConfig {
         this.stopTime = stopTime;
     }
 
-    public Integer getCycleCount() {
-        return cycleCount;
+    public Integer getCycleTime() {
+        return cycleTime;
     }
 
-    public void setCycleCount(Integer cycleCount) {
-        this.cycleCount = cycleCount;
+    public void setCycleTime(Integer cycleTime) {
+        this.cycleTime = cycleTime;
+    }
+
+    public Integer getCycleInterval() {
+        return cycleInterval;
+    }
+
+    public void setCycleInterval(Integer cycleInterval) {
+        this.cycleInterval = cycleInterval;
     }
 
     public Float getMachineUsage() {

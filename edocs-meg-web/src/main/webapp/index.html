@@ -33,7 +33,9 @@
         Start time (hh:mm): <input type="text" value="8:00" id="startTime"/><br/>
         End time (hh:mm): <input type="text" value="16:00" id="endTime"/><br/>
         Machine usage (0.0-1.0): <input type="text" value="0.5" id="usage"/><br/>
-        Cycles: <input type="text" value="1" id="cycles"/><br/>
+        Cycle: <br/>
+        <p class="tab">Average time (ms): <input type="text" value="2000" id="avgCycle"/></p><br/>
+        <p class="tab">Time interval (ms): <input type="text" value="500" id="cycleInterval"/></p><br/>
         Production Interval (secs):<br/>
         <p class="tab">Min: <input type="text" value="3600" id="minInterval"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
@@ -65,7 +67,8 @@
             var startInput = document.getElementById("startTime");
             var endInput = document.getElementById("endTime");
             var usageInput = document.getElementById("usage");
-            var cycleInput = document.getElementById("cycles");
+            var cycleTimeInput = document.getElementById("avgCycle");
+            var intervalTimeInput = document.getElementById("cycleInterval");
             var minInput = document.getElementById("minInterval");
             var maxInput = document.getElementById("maxInterval");
 
@@ -137,20 +140,26 @@
                 var startTime = startInput.value;
                 var endTime = endInput.value;
                 var usage = usageInput.value;
-                var cycles = cycleInput.value;
+                var cycleTime = cycleTimeInput.value;
+                var cycleInterval = intervalTimeInput.value;
                 var min = minInput.value;
                 var max = maxInput.value;
 
-                if (startTime !== "" && endTime !== "" && usage !== "" && cycles !== "" && min !== "" && max !== "") {
+                if (startTime !== "" && endTime !== "" && usage !== "" && cycleTime !== "" && min !== "" && max !== "") {
                     var minValue = parseInt(min);
                     var maxValue = parseInt(max);
                     var usageValue = parseFloat(usage);
-                    var cycleValue = parseInt(cycles);
-                    if (minValue > 0 && maxValue > 0 && usageValue >= 0.0 && usageValue <= 1.0 && cycleValue > 0) {
+                    var cycleTimeValue = parseInt(cycleTime);
+                    var cycleIntervalValue = parseInt(cycleInterval);
+                    if (minValue > 0 && maxValue > 0 && minValue < maxValue && usageValue >= 0.0 
+                            && usageValue <= 1.0 && cycleTimeValue > 0 && cycleIntervalValue > 0
+                            && cycleTimeValue > cycleIntervalValue
+                            && cycleTimeValue + cycleIntervalValue < maxValue*1000 / 2) {
                         return {
                             startTime: startTime,
                             stopTime: endTime,
-                            cycleCount: cycles,
+                            cycleTime: cycleTimeValue,
+                            cycleInterval: cycleIntervalValue,
                             machineUsage: usage,
                             minInterval: min,
                             maxInterval: max,
