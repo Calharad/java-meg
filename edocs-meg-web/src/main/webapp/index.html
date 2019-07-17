@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Start Page</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>
+            body * {
+                margin: 5px;
+            }
+            select {
+                padding: 2px;
+                padding-right: 15px;
+                border-radius: 10px;
+            }
+            button {
+                padding: 5px;
+            }
+            .tab { 
+                margin: 0px;
+                margin-left: 40px; 
+            }
+
+            input {
+                padding: 2px;
+                border-radius: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        Machine: <select id="machines">
+            <option value="-1" selected>Choose . . .</option>
+        </select><br/>
+        Start time (hh:mm): <input type="text" value="8:00" id="startTime"/><br/>
+        End time (hh:mm): <input type="text" value="16:00" id="endTime"/><br/>
+        Machine usage (0.0-1.0): <input type="text" value="0.5" id="usage"/><br/>
+        Cycles: <input type="text" value="1" id="cycles"/><br/>
+        Production Interval (secs):<br/>
+        <p class="tab">Min: <input type="text" value="3600" id="minInterval"/></p><br/>
+        <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
+        <button onclick="update()">Update config</button>
+        <button onclick="startSimulation()">Start</button>
+        <button onclick="stopSimulation()">Stop</button><br/><br/><br/><br/>
+
+        Force event:<br/>
+        <select id="events">
+
+        </select>
+        <button onclick="forceEvent()">Force</button>
+
+        <script>
+
+//            const EVENT_PRODUCTION_START = 2000;
+//            const EVENT_PRODUCTION_STOP = 2001;
+//            
+//            const MACHINE_PIECE_PRODUCED = 1020;
+//            
+//            const START_RECORDER = 21;
+//            const STOP_RECORDER = 22;
+//            
+//            const MACHINE_CYCLE_START = 1021;
+//            const MACHINE_CYCLE_STOP = 1022;
+
+            var machineSelect = document.getElementById("machines");
+            var eventSelect = document.getElementById("events");
+            var startInput = document.getElementById("startTime");
+            var endInput = document.getElementById("endTime");
+            var usageInput = document.getElementById("usage");
+            var cycleInput = document.getElementById("cycles");
+            var minInput = document.getElementById("minInterval");
+            var maxInput = document.getElementById("maxInterval");
+
+            function putOption(parent, optionId, optionName) {
+                var option = document.createElement("option");
+                //for testing
+                if (optionId === 3662 && optionName === "dluga3")
+                    option.setAttribute("selected", "");
+                option.setAttribute("value", optionId);
+                var text = document.createTextNode(optionName);
+                option.appendChild(text);
+                parent.appendChild(option);
+            }
+
+            function startSimulation() {
+                var data = getObject();
+                if (data !== null) {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("PUT", "http://localhost:8080/edocs-meg-web/rest/simulation/start", true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(JSON.stringify(data));
+                }
+            }
+
+            function stopSimulation() {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("PUT", "http://localhost:8080/edocs-meg-web/rest/simulation/stop", true);
+                xmlHttp.send(null);
+            }
+
+            function updateHTML(type, content) {
+                var jsonContent = JSON.parse(content);
+                console.log(jsonContent);
+                switch (type) {
+                    case "machine":
+                        jsonContent.forEach(m => putOption(machineSelect, m.id, m.objectName));
+                        break;
+                    case "event":
+                        jsonContent.forEach(e => putOption(eventSelect, e.id, e.acronim));
+                        break;
+                }
+            }
+
+            function httpGet(myUrl, type)
+            {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.onreadystatechange = function () {
+                    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                        updateHTML(type, xmlHttp.responseText);
+                    }
+                };
+                xmlHttp.open("GET", myUrl, true); // false for synchronous request
+                xmlHttp.send(null);
+                return xmlHttp.responseText;
+            }
+
+            function update() {
+                var data = getObject();
+                if (data !== null) {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("POST", "http://localhost:8080/edocs-meg-web/rest/simulation/config/", true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(JSON.stringify(data));
+                }
+            }
+
+            function getObject() {
+                var machine = machineSelect.options[machineSelect.selectedIndex].value;
+                var startTime = startInput.value;
+                var endTime = endInput.value;
+                var usage = usageInput.value;
+                var cycles = cycleInput.value;
+                var min = minInput.value;
+                var max = maxInput.value;
+
+                if (startTime !== "" && endTime !== "" && usage !== "" && cycles !== "" && min !== "" && max !== "") {
+                    var minValue = parseInt(min);
+                    var maxValue = parseInt(max);
+                    var usageValue = parseFloat(usage);
+                    var cycleValue = parseInt(cycles);
+                    if (minValue > 0 && maxValue > 0 && usageValue >= 0.0 && usageValue <= 1.0 && cycleValue > 0) {
+                        return {
+                            startTime: startTime,
+                            stopTime: endTime,
+                            cycleCount: cycles,
+                            machineUsage: usage,
+                            minInterval: min,
+                            maxInterval: max,
+                            machine: machine
+                        };
+                    } else
+                        alert("Incorrect data");
+                } else
+                    alert("Not all rows filled");
+                return null;
+            }
+
+            function forceEvent() {
+                var machine = machineSelect.options[machineSelect.selectedIndex].value;
+                var event = eventSelect.options[eventSelect.selectedIndex].value;
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("POST", "http://localhost:8080/edocs-meg-web/rest/machine/" + machine + "/event/new/" + event, true);
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(null);
+            }
+
+            var machineList = httpGet("http://localhost:8080/edocs-meg-web/rest/machine/list", "machine");
+            var eventList = httpGet("http://localhost:8080/edocs-meg-web/rest/event/type-list", "event");
+
+        </script>
+
+    </body>
+</html>
