@@ -78,19 +78,22 @@ public class SimulationBean implements SimulationBeanRemote {
 
     @Override
     public void start(SimulationConfig newConfig) {
+        LOG.log(Level.INFO, "Starting simulation . . .");
         if (newConfig != null) {
             this.config.updateConfig(newConfig);
+            LOG.log(Level.INFO, "Config updated");
         }
+        LOG.log(Level.INFO, config.toString());
         if (config.getMachineId() > 0) {
             LocalTime lt = LocalTime.now();
             LOG.log(Level.INFO, "Actual Time: {0}", lt.toString());
             LOG.log(Level.INFO, "Start time: {0}", config.getStartTime().toString());
             LOG.log(Level.INFO, "Stop time: {0}", config.getStopTime().toString());
             if (config.getStartTime().isBefore(lt) && config.getStopTime().isAfter(lt)) {
-                LOG.log(Level.INFO, "Starting . . .");
+                LOG.log(Level.INFO, "Starting machine . . .");
                 startSimulation();
             } else {
-                LOG.log(Level.INFO, "Setting timer . . .");
+                LOG.log(Level.INFO, "Setting begin timer . . .");
                 setStartTimer();
 
             }
@@ -103,24 +106,30 @@ public class SimulationBean implements SimulationBeanRemote {
         LOG.log(Level.INFO, "Restarting simulation . . .");
         stop();
         start(config);
+        LOG.log(Level.INFO, "Config updated successfully");
     }
 
     @Override
     public void stop() {
+        LOG.log(Level.INFO, "Stopping simulation . . .");
         if (baseTimer != null) {
             baseTimer.cancel();
         }
         if (cycleTimer != null) {
             cycleTimer.cancel();
         }
+        LOG.log(Level.INFO, "Timers stopped");
         productionTime = 0;
         if (state == MachineState.RUN) {
             eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_STOP);
+            LOG.log(Level.INFO, "Cycle stopped");
             eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_STOP);
+            LOG.log(Level.INFO, "Production stopped");
         }
         eventLogBean.saveEvent(config.getMachineId(), STOP_RECORDER);
         SimulationBaseConfig.restartConfig(config);
         state = MachineState.STOP;
+        LOG.log(Level.INFO, "Simulation stopped at {0}", LocalDateTime.now().toString());
 
     }
 
@@ -215,7 +224,7 @@ public class SimulationBean implements SimulationBeanRemote {
                     .atZone(ZoneId.systemDefault())
                     .toEpochSecond() * 1000);
         }
-        LOG.log(Level.INFO, "Date: {0}", date.toString());
+        LOG.log(Level.INFO, "Scheduled start time: {0}", date.toString());
         baseTimer = service.createTimer(date, TimerMode.START_PRODUCTION);
     }
 

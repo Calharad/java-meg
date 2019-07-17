@@ -42,6 +42,12 @@ public class Interval {
     public int getMax() {
         return max;
     }
+
+    @Override
+    public String toString() {
+        return "Min value: " + min + "\n"
+                + "Max value " + max + "\n"; //To change body of generated methods, choose Tools | Templates.
+    }
     
     
 }

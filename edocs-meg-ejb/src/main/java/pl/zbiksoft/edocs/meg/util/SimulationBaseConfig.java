@@ -100,4 +100,17 @@ public class SimulationBaseConfig {
         }
     }
     //</editor-fold>
+
+    @Override
+    public String toString() {
+        return "Simulation config:\n"
+                + "Start Time: " + startTime.toString() + "\n"
+                + "End Time: " + stopTime.toString() + "\n"
+                + "Assigned machine id: " + machineId + "\n"
+                + "Production interval: \n" + interval.toString() + "\n"
+                + "Cycle interval: \n" + cycleInterval.toString() + "\n"
+                + "Usage: " + machineUsage + "\n"; //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
 }

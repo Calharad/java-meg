@@ -34,7 +34,6 @@ public class SimulationController {
     @POST
     @Path("config")
     public void updateSimulationConfig(SimulationConfig config) {
-        LOG.log(Level.INFO, "Updating config . . .");
         simulationBean.updateConfig(config);
     }
     private static final Logger LOG = Logger.getLogger(SimulationController.class.getName());
@@ -42,14 +41,12 @@ public class SimulationController {
     @PUT
     @Path("start")
     public void startSimulation(SimulationConfig config) {
-        LOG.log(Level.INFO, "Starting with id= {0}. . .", config.getMachine());
         simulationBean.start(config);
     }
     
     @PUT
     @Path("stop")
     public void stopSimulation() {
-        LOG.log(Level.INFO, "Stooping simulation . . .");
         simulationBean.stop();
     }
     
