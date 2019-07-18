@@ -5,6 +5,8 @@
  */
 package pl.zbiksoft.edocs.meg.local.beans;
 
+import edocs.meg.spec.dto.controller.ControllerEventTO;
+import java.util.List;
 import javax.ejb.Local;
 import pl.zbiksoft.edocs.meg.entities.EventType;
 
@@ -18,6 +20,8 @@ public interface EventLogBeanLocal {
     EventType getEventTypeById(int id);
     
     void saveEvent(Integer machineId, Integer eventTypeId);
+
+    void saveEventByController(List<ControllerEventTO> events);
 
     
 }
