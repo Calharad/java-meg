@@ -6,6 +6,7 @@
 package pl.zbiksoft.edocs.meg.beans;
 
 import edocs.meg.spec.simulation.SimulationConfig;
+import edocs.meg.spec.util.Interval;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -103,9 +104,13 @@ public class SimulationBean implements SimulationBeanRemote {
 
     @Override
     public void updateConfig(SimulationConfig config) {
-        LOG.log(Level.INFO, "Restarting simulation . . .");
-        stop();
-        start(config);
+        if (state != MachineState.STOP) {
+            LOG.log(Level.INFO, "Restarting simulation . . .");
+            stop();
+            start(config);
+        } else {
+            this.config.updateConfig(config);
+        }
         LOG.log(Level.INFO, "Config updated successfully");
     }
 
@@ -127,7 +132,7 @@ public class SimulationBean implements SimulationBeanRemote {
             LOG.log(Level.INFO, "Production stopped");
         }
         eventLogBean.saveEvent(config.getMachineId(), STOP_RECORDER);
-        SimulationBaseConfig.restartConfig(config);
+        //SimulationBaseConfig.restartConfig(config);
         state = MachineState.STOP;
         LOG.log(Level.INFO, "Simulation stopped at {0}", LocalDateTime.now().toString());
 
@@ -163,10 +168,9 @@ public class SimulationBean implements SimulationBeanRemote {
         eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_STOP);
         if (productionFinished) {
             handleStateChange();
-        } else if (config.getCycleBreak() > 0){
+        } else if (config.getCycleBreak() > 0) {
             cycleTimer = service.createTimer(config.getCycleBreak(), TimerMode.CYCLE_BREAK);
-        }
-        else {
+        } else {
             startCycle();
         }
     }
@@ -241,6 +245,35 @@ public class SimulationBean implements SimulationBeanRemote {
         MANAGE_PRODUCTION,
         CYCLE,
         CYCLE_BREAK
+    }
+
+    @Override
+    public SimulationConfig getConfig() {
+        SimulationConfig result = new SimulationConfig();
+        result.setCycleBreak(config.getCycleBreak());
+        Interval cycle = config.getCycleInterval();
+        Interval interval = config.getInterval();
+        result.setCycleTime((cycle.getMax() + cycle.getMin()) / 2);
+        result.setCycleInterval(result.getCycleTime() - cycle.getMin());
+        result.setMachine(config.getMachineId());
+        result.setMachineUsage(config.getMachineUsage());
+        result.setMaxInterval(interval.getMax());
+        result.setMinInterval(interval.getMin());
+        result.setStartTime(config.getStartTime().toString());
+        result.setStopTime(config.getStopTime().toString());
+        return result;
+    }
+
+    @Override
+    public void restartConfig() {
+        if (state != MachineState.STOP) {
+            LOG.log(Level.INFO, "Restarting simulation . . .");
+            stop();
+            SimulationBaseConfig.restartConfig(config);
+            start(null);
+        } else {
+            SimulationBaseConfig.restartConfig(config);
+        }
     }
 
 }

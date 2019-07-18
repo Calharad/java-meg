@@ -22,4 +22,8 @@ public interface SimulationBeanRemote {
     void stop();
 
     void updateConfig(SimulationConfig config);
+
+    SimulationConfig getConfig();
+
+    void restartConfig();
 }

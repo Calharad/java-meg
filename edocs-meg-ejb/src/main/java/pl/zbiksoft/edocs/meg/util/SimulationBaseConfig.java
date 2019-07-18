@@ -17,12 +17,12 @@ public class SimulationBaseConfig {
     
     public static SimulationBaseConfig restartConfig(SimulationBaseConfig config) {
         config.cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);
-        config.interval = new Interval(3600, 3600, Interval.TimeUnit.SECOND);
-        config.machineId = -1;
+        config.interval = new Interval(3500, 3600, Interval.TimeUnit.SECOND);
+        config.machineId = 3662;
         config.machineUsage = 0.5F;
         config.startTime = LocalTime.of(8, 0);
         config.stopTime = LocalTime.of(16, 0);
-        config.cycleBreak = 0;
+        config.cycleBreak = 500;
         return config;
     }
     
@@ -30,13 +30,13 @@ public class SimulationBaseConfig {
 
     private LocalTime stopTime = LocalTime.of(16, 0);
 
-    private int machineId = -1;
+    private int machineId = 3662;
 
     private Interval cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);
 
-    private Interval interval = new Interval(3600, 3600, Interval.TimeUnit.SECOND);
+    private Interval interval = new Interval(3500, 3600, Interval.TimeUnit.SECOND);
     
-    private int cycleBreak = 0;
+    private int cycleBreak = 500;
 
     private float machineUsage = 0.5F;
     
@@ -121,6 +121,7 @@ public class SimulationBaseConfig {
                 + "\t\tAssigned machine id: " + machineId + "\n"
                 + "\t\tProduction interval: \n" + interval.toString() + "\n"
                 + "\t\tCycle interval: \n" + cycleInterval.toString() + "\n"
+                + "\t\tCycle break: " + cycleBreak + "\n"
                 + "\t\tUsage: " + machineUsage + "\n"; //To change body of generated methods, choose Tools | Templates.
     }
     

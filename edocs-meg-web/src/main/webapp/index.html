@@ -41,6 +41,7 @@
         <p class="tab">Min: <input type="text" value="3600" id="minInterval"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
         <button onclick="update()">Update config</button>
+        <button onclick="restart()">Restart config</button><br/>
         <button onclick="startSimulation()">Start</button>
         <button onclick="stopSimulation()">Stop</button><br/><br/><br/><br/>
 
@@ -144,10 +145,10 @@
                     var cycleTimeValue = parseInt(cycleTime);
                     var cycleIntervalValue = parseInt(cycleInterval);
                     var cycleBreakValue = parseInt(cycleBreak);
-                    if (minValue > 0 && maxValue > 0 && minValue < maxValue && usageValue >= 0.0 
-                            && usageValue <= 1.0 && cycleTimeValue > 0 && cycleIntervalValue > 0
+                    if (minValue > 0 && maxValue > 0 && minValue < maxValue && usageValue > 0.0
+                            && usageValue < 1.0 && cycleTimeValue > 0 && cycleIntervalValue > 0
                             && cycleTimeValue > cycleIntervalValue && cycleBreakValue >= 0
-                            && cycleTimeValue + cycleIntervalValue < maxValue*1000 / 2) {
+                            && cycleTimeValue + cycleIntervalValue < maxValue * 1000 / 2) {
                         return {
                             startTime: startTime,
                             stopTime: endTime,
@@ -175,8 +176,47 @@
                 xmlHttp.send(null);
             }
 
+            function getConfig() {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", "http://localhost:8080/edocs-meg-web/rest/simulation/config/", true);
+                xmlHttp.onreadystatechange = function () {
+                    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                        var config = JSON.parse(xmlHttp.responseText);
+                        for (var i of machineSelect.options) {
+                            if (i.value == config.machine) {
+                                i.setAttribute("selected","");
+                            }
+                        }
+                        startInput.value = config.startTime;
+                        endInput.value = config.stopTime;
+                        usageInput.value = config.machineUsage;
+                        cycleTimeInput.value = config.cycleTime;
+                        cycleBreakInput.value = config.cycleBreak;
+                        intervalTimeInput.value = config.cycleInterval;
+                        minInput.value = config.minInterval;
+                        maxInput.value = config.maxInterval;
+                    }
+                };
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(null);
+            }
+            
+            function restart() {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("PUT", "http://localhost:8080/edocs-meg-web/rest/simulation/config/restart", true);
+                xmlHttp.onreadystatechange = function () {
+                    if (xmlHttp.readyState === 4) {
+                        getConfig();
+                    }
+                };
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(null);
+            }
+
             var machineList = JSON.parse(httpGet("http://localhost:8080/edocs-meg-web/rest/machine/list", "machine"));
             var eventList = JSON.parse(httpGet("http://localhost:8080/edocs-meg-web/rest/event/type-list", "event"));
+
+            getConfig();
 
         </script>
 
