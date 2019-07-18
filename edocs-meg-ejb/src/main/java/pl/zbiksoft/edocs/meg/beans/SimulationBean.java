@@ -126,7 +126,7 @@ public class SimulationBean implements SimulationBeanRemote {
         LOG.log(Level.INFO, "Timers stopped");
         productionTime = 0;
         if (state == MachineState.RUN) {
-            eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_STOP);
+            if(cycleTimer.getTimeRemaining() > 0) eventLogBean.saveEvent(config.getMachineId(), MACHINE_CYCLE_STOP);
             LOG.log(Level.INFO, "Cycle stopped");
             eventLogBean.saveEvent(config.getMachineId(), EVENT_PRODUCTION_STOP);
             LOG.log(Level.INFO, "Production stopped");
