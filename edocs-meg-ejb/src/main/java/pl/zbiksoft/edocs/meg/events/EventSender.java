@@ -38,7 +38,7 @@ public class EventSender {
 
     private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-    public void addEvent(int eventType, ControllerEventParameterTO[] additionalParameters) {
+    public void addEvent(int eventType, ControllerEventParameterTO... additionalParameters) {
         ControllerEventTO event = new ControllerEventTO();
         if (additionalParameters != null) {
             event.getAdditionalParameters().addAll(Arrays.asList(additionalParameters));
@@ -56,7 +56,7 @@ public class EventSender {
         events.clear();
     }
 
-    public void addAndSendEvent(int eventType, ControllerEventParameterTO[] additionalParameters) {
+    public void addAndSendEvent(int eventType, ControllerEventParameterTO... additionalParameters) {
         addEvent(eventType, additionalParameters);
         sendEvents();
     }
