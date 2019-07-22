@@ -5,15 +5,17 @@
  */
 package pl.zbiksoft.edocs.meg.beans;
 
-import com.google.gson.Gson;
-import com.sun.corba.se.impl.orbutil.ObjectWriter;
 import edocs.meg.spec.dto.EventTypeTO;
 import edocs.meg.spec.dto.controller.ControllerEventTO;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import pl.zbiksoft.edocs.meg.util.DomainConfig;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
 import javax.ejb.Stateless;
@@ -35,9 +37,11 @@ import pl.zbiksoft.edocs.meg.local.beans.MachineBeanLocal;
 @Stateless
 public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
 
-    public static final String MAIN_TARGET_CONTROLLER = "http://192.168.30.3:38080/edocs-controller-ws/api/controller/save-events";
+    public static final String SAVE_EVENTS_ENDPOINT = "edocs-controller-ws/api/controller/save-events";
 
-    public static final String LOCAL_TARGET_CONTROLLER = "http://localhost:8080/edocs-controller-ws/api/controller/save-events";
+    private static final String DEFAULT_LINK = "http://192.168.30.3:38080/";
+    
+    private static String link = null;
 
     @EJB
     private EventsLogDao eventsLogDao;
@@ -45,6 +49,13 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
     @EJB
     private MachineBeanLocal machineBean;
     private static final Logger LOG = Logger.getLogger(EventLogBean.class.getName());
+    
+    @PostConstruct
+    public void init() {
+        link = DomainConfig.Application.getController() != null
+                ? "http://localhost:" + DomainConfig.getNetworkPort() + "/"
+                : DEFAULT_LINK;
+    }
 
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")
@@ -68,8 +79,13 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
 
     @Override
     public List<EventTypeTO> getEventTypes() {
+        try {
+            LOG.log(Level.SEVERE, InetAddress.getLocalHost().toString());
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(EventLogBean.class.getName()).log(Level.SEVERE, null, ex);
+        }
         List<EventTypeTO> result = new ArrayList<>();
-
+        
         eventsLogDao.getEventTypes().forEach(et -> {
             EventTypeTO etTO = new EventTypeTO();
             etTO.setId(et.getId());
@@ -84,8 +100,9 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
     @Override
     public void saveEventByController(List<ControllerEventTO> events) {
         Client client = ClientBuilder.newClient();
-        WebTarget myTarget = client.target(MAIN_TARGET_CONTROLLER);
+        WebTarget myTarget = client.target(link + SAVE_EVENTS_ENDPOINT);
         myTarget.request(MediaType.APPLICATION_JSON)
-                .post(Entity.json(events));
+                    .post(Entity.json(events));
+
     }
 }

@@ -159,7 +159,6 @@ public class SimulationBean implements SimulationBeanRemote {
 
     @Timeout
     public void handleTimeout(Timer t) {
-        LOG.log(Level.INFO, t.getInfo().toString());
         switch ((TimerMode) t.getInfo()) {
             case START_PRODUCTION:
                 startSimulation();

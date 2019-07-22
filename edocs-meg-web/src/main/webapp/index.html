@@ -52,6 +52,8 @@
         <button onclick="forceEvent()">Force</button>
 
         <script>
+            
+            var link = "/edocs-meg-web/";
 
             var machineSelect = document.getElementById("machines");
             var eventSelect = document.getElementById("events");
@@ -79,7 +81,7 @@
                 var data = getObject();
                 if (data !== null) {
                     var xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open("PUT", "http://localhost:8080/edocs-meg-web/rest/simulation/start", true);
+                    xmlHttp.open("PUT", link + "rest/simulation/start", true);
                     xmlHttp.setRequestHeader("Content-Type", "application/json");
                     xmlHttp.send(JSON.stringify(data));
                 }
@@ -87,7 +89,7 @@
 
             function stopSimulation() {
                 var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("PUT", "http://localhost:8080/edocs-meg-web/rest/simulation/stop", true);
+                xmlHttp.open("PUT", link + "rest/simulation/stop", true);
                 xmlHttp.send(null);
             }
 
@@ -120,7 +122,7 @@
                 var data = getObject();
                 if (data !== null) {
                     var xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open("POST", "http://localhost:8080/edocs-meg-web/rest/simulation/config/", true);
+                    xmlHttp.open("POST", link + "rest/simulation/config/", true);
                     xmlHttp.setRequestHeader("Content-Type", "application/json");
                     xmlHttp.send(JSON.stringify(data));
                 }
@@ -171,14 +173,14 @@
                 var machine = machineSelect.options[machineSelect.selectedIndex].value;
                 var event = eventSelect.options[eventSelect.selectedIndex].value;
                 var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("POST", "http://localhost:8080/edocs-meg-web/rest/machine/" + machine + "/event/new/" + event, true);
+                xmlHttp.open("POST", link + "rest/machine/" + machine + "/event/new/" + event, true);
                 xmlHttp.setRequestHeader("Content-Type", "application/json");
                 xmlHttp.send(null);
             }
 
             function getConfig() {
                 var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("GET", "http://localhost:8080/edocs-meg-web/rest/simulation/config/", true);
+                xmlHttp.open("GET", link + "rest/simulation/config/", true);
                 xmlHttp.onreadystatechange = function () {
                     if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
                         var config = JSON.parse(xmlHttp.responseText);
@@ -203,7 +205,7 @@
             
             function restart() {
                 var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("PUT", "http://localhost:8080/edocs-meg-web/rest/simulation/config/restart", true);
+                xmlHttp.open("PUT", link + "rest/simulation/config/restart", true);
                 xmlHttp.onreadystatechange = function () {
                     if (xmlHttp.readyState === 4) {
                         getConfig();
@@ -213,8 +215,8 @@
                 xmlHttp.send(null);
             }
 
-            var machineList = JSON.parse(httpGet("http://localhost:8080/edocs-meg-web/rest/machine/list", "machine"));
-            var eventList = JSON.parse(httpGet("http://localhost:8080/edocs-meg-web/rest/event/type-list", "event"));
+            var machineList = JSON.parse(httpGet(link + "rest/machine/list", "machine"));
+            var eventList = JSON.parse(httpGet(link + "rest/event/type-list", "event"));
 
             getConfig();
 
