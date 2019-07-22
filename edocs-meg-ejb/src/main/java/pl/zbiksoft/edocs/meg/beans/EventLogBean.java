@@ -7,13 +7,10 @@ package pl.zbiksoft.edocs.meg.beans;
 
 import edocs.meg.spec.dto.EventTypeTO;
 import edocs.meg.spec.dto.controller.ControllerEventTO;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import pl.zbiksoft.edocs.meg.util.DomainConfig;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;

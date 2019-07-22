@@ -6,7 +6,6 @@
 package pl.zbiksoft.edocs.meg.beans;
 
 import edocs.meg.spec.simulation.SimulationConfig;
-import javafx.util.Pair;
 import javax.ejb.Remote;
 
 

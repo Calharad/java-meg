@@ -6,7 +6,6 @@
 package edocs.meg.web;
 
 import edocs.meg.spec.simulation.SimulationConfig;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;

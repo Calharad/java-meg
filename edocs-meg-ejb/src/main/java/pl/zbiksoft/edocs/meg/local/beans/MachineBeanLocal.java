@@ -5,7 +5,6 @@
  */
 package pl.zbiksoft.edocs.meg.local.beans;
 
-import edocs.meg.spec.dto.MachineTO;
 import javax.ejb.Local;
 import pl.zbiksoft.edocs.meg.entities.Machine;
 

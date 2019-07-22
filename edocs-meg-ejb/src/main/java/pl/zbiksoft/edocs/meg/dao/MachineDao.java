@@ -5,8 +5,6 @@
  */
 package pl.zbiksoft.edocs.meg.dao;
 
-import edocs.meg.spec.dto.MachineTO;
-import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.ejb.LocalBean;
