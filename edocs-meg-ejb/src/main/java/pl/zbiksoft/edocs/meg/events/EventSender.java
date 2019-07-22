@@ -24,27 +24,24 @@ import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
  */
 public class EventSender {
 
-    public EventSender(SimulationBaseConfig config, EventLogBeanLocal eventLogBean) {
-        this.config = config;
+    public EventSender(EventLogBeanLocal eventLogBean) {
         this.eventLogBean = eventLogBean;
         df.setTimeZone(TimeZone.getDefault());
     }
-    
-    private final SimulationBaseConfig config;
-    
+        
     private final EventLogBeanLocal eventLogBean;
     
     private final List<ControllerEventTO> events = new ArrayList<>();
 
     private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-    public void addEvent(int eventType, ControllerEventParameterTO... additionalParameters) {
+    public void addEvent(int eventType, int machineId, ControllerEventParameterTO... additionalParameters) {
         ControllerEventTO event = new ControllerEventTO();
         if (additionalParameters != null) {
             event.setAdditionalParameters(Arrays.asList(additionalParameters));
         }
         event.setEventTypeId(eventType);
-        event.setMachineId(config.getMachineId());
+        event.setMachineId(machineId);
         Date date = new Date(System.currentTimeMillis());
         event.setPlcTime(df.format(date));
         events.add(event);
@@ -56,8 +53,8 @@ public class EventSender {
         events.clear();
     }
 
-    public void addAndSendEvent(int eventType, ControllerEventParameterTO... additionalParameters) {
-        addEvent(eventType, additionalParameters);
+    public void addAndSendEvent(int eventType, int machineId, ControllerEventParameterTO... additionalParameters) {
+        addEvent(eventType, machineId, additionalParameters);
         sendEvents();
     }
     

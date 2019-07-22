@@ -13,7 +13,7 @@ import java.time.LocalTime;
  *
  * @author ZbikKomp
  */
-public class SimulationBaseConfig {
+public final class SimulationBaseConfig {
     
     public static SimulationBaseConfig restartConfig(SimulationBaseConfig config) {
         config.cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);
@@ -39,7 +39,14 @@ public class SimulationBaseConfig {
     private int cycleBreak = 500;
 
     private float machineUsage = 0.5F;
+
+    public SimulationBaseConfig() {
+    }
     
+    public SimulationBaseConfig(SimulationConfig cfg) {
+        updateConfig(cfg);
+    }
+
     public void updateConfig(SimulationConfig config) {
         setStartTime(config.getStartTime());
         setStopTime(config.getStopTime());

@@ -18,11 +18,13 @@ public interface SimulationBeanRemote {
 
     void start(SimulationConfig config);    
 
-    void stop();
+    void stop(int machineId);
 
     void updateConfig(SimulationConfig config);
 
-    SimulationConfig getConfig();
+    SimulationConfig getConfig(int machineId);
 
-    void restartConfig();
+    void restartConfig(int machineId);
+
+    void stopAll();
 }

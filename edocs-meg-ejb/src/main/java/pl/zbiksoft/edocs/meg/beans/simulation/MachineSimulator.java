@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package pl.zbiksoft.edocs.meg.beans;
+package pl.zbiksoft.edocs.meg.beans.simulation;
 
 import edocs.meg.spec.simulation.SimulationConfig;
 import edocs.meg.spec.util.Interval;
@@ -14,57 +14,23 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Stateless;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerService;
 import pl.zbiksoft.edocs.meg.events.EventSender;
-import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
-import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
 import pl.zbiksoft.edocs.meg.util.MachineState;
+import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 import pl.zbiksoft.edocs.meg.util.StopWatch;
 
 /**
  *
  * @author ZbikKomp
  */
-@Singleton
-@Stateless
-public class SimulationBean implements SimulationBeanRemote {
-
-    private final int EVENT_PRODUCTION_START = 2000;
-    private final int EVENT_PRODUCTION_STOP = 2001;
-
-    private final int MACHINE_PIECE_PRODUCED = 1020;
-
-    private final int START_RECORDER = 21;
-    private final int STOP_RECORDER = 22;
-
-    private final int MACHINE_CYCLE_START = 1021;
-    private final int MACHINE_CYCLE_STOP = 1022;
-
-    @Resource
-    private TimerService service;
-
-    @EJB
-    private EventLogBeanLocal eventLogBean;
-
-    private long productionTime = 0;
+public class MachineSimulator {
 
     private final SimulationBaseConfig config = new SimulationBaseConfig();
 
-    private Timer cycleTimer;
-
-    private Timer baseTimer;
-
     private final StopWatch watch = new StopWatch();
-    
-    private EventSender sender;
 
     //check whether baseTimer has ended production
     private boolean productionFinished = false;
@@ -73,28 +39,80 @@ public class SimulationBean implements SimulationBeanRemote {
     //if RUN, production has started
     //if PAUSE, machine has a break
     private MachineState state = MachineState.STOP;
-    
-    @PostConstruct
-    public void init() {
-         sender = new EventSender(config, eventLogBean);
+
+    private long productionTime = 0;
+
+    private final TimerService service;
+
+    private final EventSender sender;
+
+    private Timer baseTimer;
+
+    private Timer cycleTimer;
+
+    public MachineSimulator(TimerService service, EventSender sender) {
+        this.service = service;
+        this.sender = sender;
+    }
+
+    public MachineSimulator(TimerService service, EventSender sender, SimulationConfig cfg) {
+        this.service = service;
+        this.sender = sender;
+        this.config.updateConfig(cfg);
+    }
+    private static final Logger LOG = Logger.getLogger(MachineSimulator.class.getName());
+
+    public MachineState getState() {
+        return state;
+    }
+
+    public SimulationBaseConfig getConfig() {
+        return config;
     }
     
-    
-    @PreDestroy
-    public void onDestroy() {
+    public SimulationConfig getConfigTO() {
+        SimulationConfig result = new SimulationConfig();
+        result.setCycleBreak(config.getCycleBreak());
+        Interval cycle = config.getCycleInterval();
+        Interval interval = config.getInterval();
+        result.setCycleTime((cycle.getMax() + cycle.getMin()) / 2);
+        result.setCycleInterval(result.getCycleTime() - cycle.getMin());
+        result.setMachine(config.getMachineId());
+        result.setMachineUsage(config.getMachineUsage());
+        result.setMaxInterval(interval.getMax());
+        result.setMinInterval(interval.getMin());
+        result.setStartTime(config.getStartTime().toString());
+        result.setStopTime(config.getStopTime().toString());
+        return result;
+    }
+
+    public int getMachineId() {
+        return config.getMachineId();
+    }
+
+    public void updateConfig(SimulationConfig cfg) {
         if (state != MachineState.STOP) {
+            LOG.log(Level.INFO, "Restarting simulation . . .");
             stop();
+            start();
+        } else {
+            config.updateConfig(cfg);
+        }
+    }
+    
+    public void restartConfig() {
+        if (state != MachineState.STOP) {
+            LOG.log(Level.INFO, "Restarting simulation . . .");
+            stop();
+            SimulationBaseConfig.restartConfig(config);
+            start();
+        } else {
+            SimulationBaseConfig.restartConfig(config);
         }
     }
 
-    @Override
-    public void start(SimulationConfig newConfig) {
+    public void start() {
         if (state == MachineState.STOP) {
-            LOG.log(Level.INFO, "Starting simulation . . .");
-            if (newConfig != null) {
-                this.config.updateConfig(newConfig);
-                LOG.log(Level.INFO, "Config updated");
-            }
             LOG.log(Level.INFO, config.toString());
             if (config.getMachineId() > 0) {
                 LocalTime lt = LocalTime.now();
@@ -114,40 +132,32 @@ public class SimulationBean implements SimulationBeanRemote {
             LOG.log(Level.WARNING, "Simulation already started");
         }
     }
-    private static final Logger LOG = Logger.getLogger(SimulationBean.class.getName());
 
-    @Override
-    public void updateConfig(SimulationConfig config) {
-        if (state != MachineState.STOP) {
-            LOG.log(Level.INFO, "Restarting simulation . . .");
-            stop();
-            start(config);
-        } else {
-            this.config.updateConfig(config);
-        }
-        LOG.log(Level.INFO, "Config updated successfully");
-    }
-
-    @Override
     public void stop() {
         if (state != MachineState.STOP) {
             LOG.log(Level.INFO, "Stopping simulation . . .");
-            service.getTimers().forEach(t -> t.cancel());
+            if(baseTimer != null && baseTimer.getTimeRemaining() > 0) {
+                baseTimer.cancel();
+            }
+            
+            if(cycleTimer != null && cycleTimer.getTimeRemaining() > 0) {
+                cycleTimer.cancel();
+            }
+            
             LOG.log(Level.INFO, "Timers stopped");
             productionTime = 0;
             if (state == MachineState.RUN) {
-                sender.addEvent(MACHINE_CYCLE_STOP);
+                sender.addEvent(MACHINE_CYCLE_STOP, config.getMachineId());
                 LOG.log(Level.INFO, "Cycle stopped");
-                sender.addEvent(EVENT_PRODUCTION_STOP);
+                sender.addEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
                 LOG.log(Level.INFO, "Production stopped");
             }
-            sender.addAndSendEvent(STOP_RECORDER);
+            sender.addAndSendEvent(STOP_RECORDER, config.getMachineId());
             state = MachineState.STOP;
             LOG.log(Level.INFO, "Simulation stopped at {0}", LocalDateTime.now().toString());
         } else {
             LOG.log(Level.WARNING, "Simulation already stopped");
         }
-
     }
 
     private void startSimulation() {
@@ -176,8 +186,8 @@ public class SimulationBean implements SimulationBeanRemote {
     }
 
     private void finishCycle() {
-        sender.addEvent(MACHINE_PIECE_PRODUCED);
-        sender.addAndSendEvent(MACHINE_CYCLE_STOP);
+        sender.addEvent(MACHINE_PIECE_PRODUCED, config.getMachineId());
+        sender.addAndSendEvent(MACHINE_CYCLE_STOP, config.getMachineId());
         if (productionFinished) {
             handleStateChange();
         } else if (config.getCycleBreak() > 0) {
@@ -189,30 +199,30 @@ public class SimulationBean implements SimulationBeanRemote {
 
     private void startCycle() {
         cycleTimer = service.createTimer(config.getCycleInterval().getValue(), TimerMode.CYCLE);
-        sender.addAndSendEvent(MACHINE_CYCLE_START);
+        sender.addAndSendEvent(MACHINE_CYCLE_START, config.getMachineId());
     }
 
     private void handleStateChange() {
         switch (state) {
             case STOP:
                 state = MachineState.RUN;
-                sender.addEvent(START_RECORDER);
+                sender.addEvent(START_RECORDER, config.getMachineId());
                 productionTime = config.getInterval().getValue() * 1000;
                 baseTimer = service.createTimer(productionTime, TimerMode.MANAGE_PRODUCTION);
-                sender.addAndSendEvent(EVENT_PRODUCTION_START);
+                sender.addAndSendEvent(EVENT_PRODUCTION_START, config.getMachineId());
                 startCycle();
                 break;
             case PAUSE:
                 if (LocalTime.now().isAfter(config.getStopTime())) {
                     LOG.log(Level.INFO, "Simulation stooped at {0}", LocalDateTime.now().toString());
                     state = MachineState.STOP;
-                    sender.addAndSendEvent(STOP_RECORDER);
+                    sender.addAndSendEvent(STOP_RECORDER, config.getMachineId());
                     setStartTimer();
                 } else {
                     state = MachineState.RUN;
                     productionTime = config.getInterval().getValue() * 1000;
                     baseTimer = service.createTimer(productionTime, TimerMode.MANAGE_PRODUCTION);
-                    sender.addAndSendEvent(EVENT_PRODUCTION_START);
+                    sender.addAndSendEvent(EVENT_PRODUCTION_START, config.getMachineId());
                     startCycle();
                 }
                 break;
@@ -228,7 +238,7 @@ public class SimulationBean implements SimulationBeanRemote {
                     baseTimer = service
                             .createTimer((long) ((productionTime + watch.getElapsedTime() - (productionTime + watch.getElapsedTime()) * usage) / usage),
                                     TimerMode.MANAGE_PRODUCTION);
-                    sender.addAndSendEvent(EVENT_PRODUCTION_STOP);
+                    sender.addAndSendEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
                 }
                 break;
         }
@@ -249,45 +259,24 @@ public class SimulationBean implements SimulationBeanRemote {
         LOG.log(Level.INFO, "Scheduled start time: {0}", date.toString());
         baseTimer = service.createTimer(date, TimerMode.START_PRODUCTION);
     }
-
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
     private enum TimerMode {
         START_PRODUCTION,
         MANAGE_PRODUCTION,
         CYCLE,
         CYCLE_BREAK
     }
-
-    @Override
-    public SimulationConfig getConfig() {
-        SimulationConfig result = new SimulationConfig();
-        result.setCycleBreak(config.getCycleBreak());
-        Interval cycle = config.getCycleInterval();
-        Interval interval = config.getInterval();
-        result.setCycleTime((cycle.getMax() + cycle.getMin()) / 2);
-        result.setCycleInterval(result.getCycleTime() - cycle.getMin());
-        result.setMachine(config.getMachineId());
-        result.setMachineUsage(config.getMachineUsage());
-        result.setMaxInterval(interval.getMax());
-        result.setMinInterval(interval.getMin());
-        result.setStartTime(config.getStartTime().toString());
-        result.setStopTime(config.getStopTime().toString());
-        return result;
-    }
-
-    @Override
-    public void restartConfig() {
-        if (state != MachineState.STOP) {
-            LOG.log(Level.INFO, "Restarting simulation . . .");
-            stop();
-            SimulationBaseConfig.restartConfig(config);
-            start(null);
-        } else {
-            SimulationBaseConfig.restartConfig(config);
-        }
-    }
-
     
+    //<editor-fold defaultstate="collapsed" desc="Constants">
+    private static final int EVENT_PRODUCTION_START = 2000;
+    static final int EVENT_PRODUCTION_STOP = 2001;
+
+    private static final int MACHINE_PIECE_PRODUCED = 1020;
+
+    private static final int START_RECORDER = 21;
+    static final int STOP_RECORDER = 22;
+
+    private static final int MACHINE_CYCLE_START = 1021;
+    final static int MACHINE_CYCLE_STOP = 1022;
+    //</editor-fold>
 
 }
