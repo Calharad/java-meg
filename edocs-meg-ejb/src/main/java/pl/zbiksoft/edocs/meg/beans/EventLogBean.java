@@ -79,11 +79,6 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
 
     @Override
     public List<EventTypeTO> getEventTypes() {
-        try {
-            LOG.log(Level.SEVERE, InetAddress.getLocalHost().toString());
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(EventLogBean.class.getName()).log(Level.SEVERE, null, ex);
-        }
         List<EventTypeTO> result = new ArrayList<>();
         
         eventsLogDao.getEventTypes().forEach(et -> {
@@ -99,10 +94,11 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
 
     @Override
     public void saveEventByController(List<ControllerEventTO> events) {
+        ControllerEventTO[] array = events.toArray(new ControllerEventTO[events.size()]);
         Client client = ClientBuilder.newClient();
         WebTarget myTarget = client.target(link + SAVE_EVENTS_ENDPOINT);
         myTarget.request(MediaType.APPLICATION_JSON)
-                    .post(Entity.json(events));
+                    .post(Entity.json(array));
 
     }
 }

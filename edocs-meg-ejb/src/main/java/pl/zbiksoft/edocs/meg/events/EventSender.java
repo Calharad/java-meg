@@ -41,7 +41,7 @@ public class EventSender {
     public void addEvent(int eventType, ControllerEventParameterTO... additionalParameters) {
         ControllerEventTO event = new ControllerEventTO();
         if (additionalParameters != null) {
-            event.getAdditionalParameters().addAll(Arrays.asList(additionalParameters));
+            event.setAdditionalParameters(Arrays.asList(additionalParameters));
         }
         event.setEventTypeId(eventType);
         event.setMachineId(config.getMachineId());

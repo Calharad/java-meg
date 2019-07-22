@@ -6,8 +6,6 @@
 package edocs.meg.spec.dto.controller;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -30,7 +28,6 @@ public class ControllerEventTO implements Serializable {
     private List<ControllerEventParameterTO> additionalParameters;
 
     public ControllerEventTO() {
-        additionalParameters = new ArrayList<ControllerEventParameterTO>();
     }
 
     public int getEventNumber() {
