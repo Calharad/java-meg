@@ -5,6 +5,8 @@
  */
 package pl.zbiksoft.edocs.meg.local.beans;
 
+import edocs.meg.spec.dto.MachineTO;
+import java.util.List;
 import javax.ejb.Local;
 import pl.zbiksoft.edocs.meg.entities.Machine;
 
@@ -16,5 +18,7 @@ import pl.zbiksoft.edocs.meg.entities.Machine;
 public interface MachineBeanLocal {
 
     Machine getMachineById(int id);
+    
+    List<MachineTO> getMachines();
     
 }

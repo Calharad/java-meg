@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Multiple simulation</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="../static/styles.css" media="screen" />
+
+    </head>
+    <body>
+        <a href="../index.html">Return</a><br/><br/>
+
+        Machine: <select id="machines" multiple size="10">
+        </select> (Use Ctrl+Click for multiple choose)<br/>
+        Start time (hh:mm): <input type="text" value="8:00" id="startTime"/><br/>
+        End time (hh:mm): <input type="text" value="16:00" id="endTime"/><br/>
+        Machine usage (0.0-1.0): <input type="text" value="0.5" id="usage"/><br/>
+        Cycle: <br/>
+        <p class="tab">Average time (ms): <input type="text" value="2000" id="avgCycle"/></p><br/>
+        <p class="tab">Time interval (ms): <input type="text" value="500" id="cycleInterval"/></p><br/>
+        <p class="tab">Break between cycles (ms): <input type="text" value="1000" id="cycleBreak"/></p><br/>
+        Production Interval (secs):<br/>
+        <p class="tab">Min: <input type="text" value="3600" id="minInterval"/></p><br/>
+        <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
+        <button onclick="update()">Update config</button>
+        <button onclick="restart()">Restart config</button><br/>
+        <button onclick="startSimulation()">Start selected</button>
+        <button onclick="stopSimulation()">Stop selected</button><br/>
+        <button onclick="stopSimulationSession()">Stop opened machines</button><br/>
+        <button onclick="stopAll()">Stop all machines</button><br/><br/><br/>
+
+        <script>
+
+            var link = "/edocs-meg-web/rest/";
+
+            var machineSelect = document.getElementById("machines");
+            var startInput = document.getElementById("startTime");
+            var endInput = document.getElementById("endTime");
+            var usageInput = document.getElementById("usage");
+            var cycleTimeInput = document.getElementById("avgCycle");
+            var intervalTimeInput = document.getElementById("cycleInterval");
+            var cycleBreakInput = document.getElementById("cycleBreak");
+            var minInput = document.getElementById("minInterval");
+            var maxInput = document.getElementById("maxInterval");
+
+            function httpGet(myUrl)
+            {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.onreadystatechange = function () {
+                    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                        updateHTML(xmlHttp.responseText);
+                    }
+                };
+                xmlHttp.open("GET", myUrl, false); // false for synchronous request
+                xmlHttp.send(null);
+                return xmlHttp.responseText;
+            }
+
+            function updateHTML(content) {
+                JSON.parse(content).forEach(m => putOption(machineSelect, m.id, m.objectName));
+            }
+
+            function putOption(parent, optionId, optionName) {
+                var option = document.createElement("option");
+                //for testing
+//                if (optionId === 3662 && optionName === "dluga3")
+//                    option.setAttribute("selected", "");
+                option.setAttribute("value", optionId);
+                var text = document.createTextNode(optionName);
+                option.appendChild(text);
+                parent.appendChild(option);
+            }
+
+            function startSimulation() {
+                var data = getArray();
+                if (data !== null && data.length > 0) {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("PUT", link + "simulation/start", true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(JSON.stringify(data));
+                }
+            }
+
+            function stopSimulation() {
+                var machines = getSelectedMachines();
+                if(machines.length <= 0) return;
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("PUT", link + "simulation/stop", true);
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(JSON.stringify(machines));
+            }
+
+            function update() {
+                var data = getArray();
+                if (data !== null && data.length > 0) {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("POST", link + "simulation/config/", true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(JSON.stringify(data));
+                }
+            }
+            
+            function getSelectedMachines() {
+                return machineSelect.options.filter(o => o.selected).map(o => o.value);
+            }
+
+            function getArray() {
+                var list = [];
+                var machines = getSelectedMachines();
+                var startTime = startInput.value;
+                var endTime = endInput.value;
+                var usage = usageInput.value;
+                var cycleTime = cycleTimeInput.value;
+                var cycleInterval = intervalTimeInput.value;
+                var cycleBreak = cycleBreakInput.value;
+                var min = minInput.value;
+                var max = maxInput.value;
+
+                if (startTime !== "" && endTime !== "" && usage !== "" && cycleTime !== "" && min !== "" && max !== ""
+                        && cycleInterval !== "" && cycleBreak !== "") {
+                    var minValue = parseInt(min);
+                    var maxValue = parseInt(max);
+                    var usageValue = parseFloat(usage);
+                    var cycleTimeValue = parseInt(cycleTime);
+                    var cycleIntervalValue = parseInt(cycleInterval);
+                    var cycleBreakValue = parseInt(cycleBreak);
+                    if (minValue > 0 && maxValue > 0 && minValue < maxValue && usageValue > 0.0
+                            && usageValue < 1.0 && cycleTimeValue > 0 && cycleIntervalValue > 0
+                            && cycleTimeValue > cycleIntervalValue && cycleBreakValue >= 0
+                            && cycleTimeValue + cycleIntervalValue < maxValue * 1000 / 2) {
+                        for (m of machines)
+                            list.push({
+                                startTime: startTime,
+                                stopTime: endTime,
+                                cycleTime: cycleTimeValue,
+                                cycleInterval: cycleIntervalValue,
+                                cycleBreak: cycleBreakValue,
+                                machineUsage: usage,
+                                minInterval: min,
+                                maxInterval: max,
+                                machine: m
+                            });
+                    } else
+                        alert("Incorrect data");
+                } else
+                    alert("Not all rows filled");
+                return null;
+            }
+
+            function stopSimulationSession() {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("PUT", link + "simulation/stop/active", true);
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(null);
+            }
+
+            function stopAll() {
+                if (confirm("It will stop all machines in database! Continue?")) {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("PUT", link + "simulation/stop/all", true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(null);
+                }
+            }
+
+            function restart() {
+                var machines = getSelectedMachines();
+                if(machines.length <= 0) return;
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("PUT", link + "simulation/config/restart", true);
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(JSON.stringify(machines));
+            }
+
+            var machineList = JSON.parse(httpGet(link + "machine/list"));
+
+        </script>
+    </body>
+</html>

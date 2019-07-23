@@ -26,6 +26,22 @@ public final class SimulationBaseConfig {
         return config;
     }
     
+    public static SimulationConfig toSimulationConfig(SimulationBaseConfig config) {
+        SimulationConfig result = new SimulationConfig();
+        result.setCycleBreak(config.getCycleBreak());
+        Interval cycle = config.getCycleInterval();
+        Interval interval = config.getInterval();
+        result.setCycleTime((cycle.getMax() + cycle.getMin()) / 2);
+        result.setCycleInterval(result.getCycleTime() - cycle.getMin());
+        result.setMachine(config.getMachineId());
+        result.setMachineUsage(config.getMachineUsage());
+        result.setMaxInterval(interval.getMax());
+        result.setMinInterval(interval.getMin());
+        result.setStartTime(config.getStartTime().toString());
+        result.setStopTime(config.getStopTime().toString());
+        return result;
+    }
+    
     private LocalTime startTime = LocalTime.of(8, 0);
 
     private LocalTime stopTime = LocalTime.of(16, 0);
@@ -45,6 +61,10 @@ public final class SimulationBaseConfig {
     
     public SimulationBaseConfig(SimulationConfig cfg) {
         updateConfig(cfg);
+    }
+    
+    public SimulationConfig toSimulationConfig() {
+        return SimulationBaseConfig.toSimulationConfig(this);
     }
 
     public void updateConfig(SimulationConfig config) {

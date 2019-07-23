@@ -60,6 +60,7 @@ public class MachineSimulator {
         this.sender = sender;
         this.config.updateConfig(cfg);
     }
+    
     private static final Logger LOG = Logger.getLogger(MachineSimulator.class.getName());
 
     public MachineState getState() {
@@ -71,19 +72,7 @@ public class MachineSimulator {
     }
     
     public SimulationConfig getConfigTO() {
-        SimulationConfig result = new SimulationConfig();
-        result.setCycleBreak(config.getCycleBreak());
-        Interval cycle = config.getCycleInterval();
-        Interval interval = config.getInterval();
-        result.setCycleTime((cycle.getMax() + cycle.getMin()) / 2);
-        result.setCycleInterval(result.getCycleTime() - cycle.getMin());
-        result.setMachine(config.getMachineId());
-        result.setMachineUsage(config.getMachineUsage());
-        result.setMaxInterval(interval.getMax());
-        result.setMinInterval(interval.getMin());
-        result.setStartTime(config.getStartTime().toString());
-        result.setStopTime(config.getStopTime().toString());
-        return result;
+        return SimulationBaseConfig.toSimulationConfig(config);
     }
 
     public int getMachineId() {

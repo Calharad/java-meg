@@ -17,5 +17,7 @@ import javax.ejb.Remote;
 public interface MachineBeanRemote {
 
     List<MachineTO> getMachines();
+
+    long getMachineCount();
     
 }

@@ -44,6 +44,12 @@ public class MachineController {
         return machineBean.getMachines();
     }
     
+    @GET
+    @Path("list/count")
+    public String getMachineCount() {
+        return String.valueOf(machineBean.getMachineCount());
+    }
+    
     @POST 
     @Path("{id}/event/new/{eventId}")
     public void saveEvent(@PathParam("id") Integer machineId, @PathParam("eventId") Integer eventId) {

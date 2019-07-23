@@ -26,5 +26,11 @@ public interface SimulationBeanRemote {
 
     void restartConfig(int machineId);
 
-    void stopAll();
+    void stopSimulationMachines();
+
+    String getState(int machineId);
+
+    SimulationConfig getDefaultConfig();
+
+    void stopAllMachines();
 }

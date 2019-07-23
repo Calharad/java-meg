@@ -9,6 +9,7 @@ import edocs.meg.spec.simulation.SimulationConfig;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
@@ -19,7 +20,9 @@ import javax.ejb.TimerService;
 import pl.zbiksoft.edocs.meg.beans.SimulationBeanRemote;
 import pl.zbiksoft.edocs.meg.events.EventSender;
 import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
+import pl.zbiksoft.edocs.meg.local.beans.MachineBeanLocal;
 import pl.zbiksoft.edocs.meg.util.MachineState;
+import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 
 /**
  *
@@ -34,13 +37,15 @@ public class SimulationBean implements SimulationBeanRemote {
     repair rest and add more business methods if needed
     repair website, split int more pages
     test test and test
-    */
-    
+     */
     @Resource
     private TimerService service;
 
     @EJB
     private EventLogBeanLocal eventLogBean;
+    
+    @EJB
+    private MachineBeanLocal machineBean;
 
     private EventSender sender;
 
@@ -71,8 +76,8 @@ public class SimulationBean implements SimulationBeanRemote {
             m.start();
             machineList.put(m.getMachineId(), m);
         }
-
     }
+    
     private static final Logger LOG = Logger.getLogger(SimulationBean.class.getName());
 
     @Override
@@ -91,7 +96,7 @@ public class SimulationBean implements SimulationBeanRemote {
     @Override
     public SimulationConfig getConfig(int machineId) {
         MachineSimulator m = machineList.get(machineId);
-        if(m != null) {
+        if (m != null) {
             return m.getConfigTO();
         }
         else return null;
@@ -100,14 +105,35 @@ public class SimulationBean implements SimulationBeanRemote {
     @Override
     public void restartConfig(int machineId) {
         MachineSimulator m = machineList.get(machineId);
-        if(m!= null) {
+        if (m != null) {
             m.restartConfig();
         }
     }
 
     @Override
-    public void stopAll() {
-        service.getTimers().forEach(t -> t.cancel());
+    public void stopSimulationMachines() {
+        machineList.values().forEach(m -> m.stop());
     }
+
+    @Override
+    public String getState(int machineId) {
+        MachineSimulator m = machineList.get(machineId);
+        if(m != null) return m.getState().name().toLowerCase();
+        else return "";
+    }
+
+    @Override
+    public SimulationConfig getDefaultConfig() {
+        return new SimulationBaseConfig().toSimulationConfig();
+    }
+
+    @Override
+    public void stopAllMachines() {
+        EventSender eventSender = new EventSender(eventLogBean);
+        machineBean.getMachines().forEach(m -> eventSender.addEvent(MachineSimulator.STOP_RECORDER, m.getId()));
+        eventSender.sendEvents();
+    }
+    
+    
 
 }

@@ -1,0 +1,29 @@
+body * {
+    margin: 5px;
+}
+select {
+    padding: 2px;
+    padding-right: 15px;
+    border-radius: 10px;
+}
+button {
+    padding: 5px;
+}
+.tab { 
+    margin: 0px;
+    margin-left: 40px; 
+}
+
+input {
+    padding: 2px;
+    border-radius: 5px;
+}
+
+a {
+    color: black;
+    font-weight: bold;
+}
+
+a:hover {
+    color: darkgray;
+}

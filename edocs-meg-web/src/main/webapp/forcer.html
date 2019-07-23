@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Event forcer</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="static/styles.css" media="screen" />        
+    </head>
+    <body>
+        <a href="index.html">Return</a><br/><br/>
+        
+        Machine: <select id="machines">
+            <option value="-1" selected>Choose . . .</option>
+        </select><br/>
+        Force event:<br/>
+        <select id="events">
+
+        </select>
+        <button onclick="forceEvent()">Force</button>
+
+        <script>
+            var link = "/edocs-meg-web/";
+
+            var eventSelect = document.getElementById("events");
+            var machineSelect = document.getElementById("machines");
+
+            function forceEvent() {
+                var machine = machineSelect.options[machineSelect.selectedIndex].value;
+                var event = eventSelect.options[eventSelect.selectedIndex].value;
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("POST", link + "rest/machine/" + machine + "/event/new/" + event, true);
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(null);
+            }
+
+            function httpGet(myUrl, type)
+            {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.onreadystatechange = function () {
+                    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                        updateHTML(type, xmlHttp.responseText);
+                    }
+                };
+                xmlHttp.open("GET", myUrl, false); // false for synchronous request
+                xmlHttp.send(null);
+                return xmlHttp.responseText;
+            }
+
+            function updateHTML(type, content) {
+                var jsonContent = JSON.parse(content);
+                switch (type) {
+                    case "machine":
+                        jsonContent.forEach(m => putOption(machineSelect, m.id, m.objectName));
+                        break;
+                    case "event":
+                        jsonContent.forEach(e => putOption(eventSelect, e.id, e.acronim));
+                        break;
+                }
+            }
+
+            function putOption(parent, optionId, optionName) {
+                var option = document.createElement("option");
+                //for testing
+                if (optionId === 3662 && optionName === "dluga3")
+                    option.setAttribute("selected", "");
+                option.setAttribute("value", optionId);
+                var text = document.createTextNode(optionName);
+                option.appendChild(text);
+                parent.appendChild(option);
+            }
+
+            var eventList = JSON.parse(httpGet(link + "rest/event/type-list", "event"));
+            var machineList = JSON.parse(httpGet(link + "rest/machine/list", "machine"));
+        </script>
+    </body>
+</html>

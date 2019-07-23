@@ -22,6 +22,10 @@ public class MachineDao extends Dao {
         return em.createQuery("select m from Machine m").getResultList();
     }
     
+    public Long getMachineCount() {
+        return em.createQuery("SELECT count(m.archived) from Machine m", Long.class).getSingleResult();
+    }
+    
     public Machine getMachineById(int id) {
         return em.find(Machine.class, id);
     }
