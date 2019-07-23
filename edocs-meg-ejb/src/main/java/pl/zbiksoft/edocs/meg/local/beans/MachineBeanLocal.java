@@ -20,5 +20,7 @@ public interface MachineBeanLocal {
     Machine getMachineById(int id);
     
     List<MachineTO> getMachines();
+
+    List<Integer> getMachineIds();
     
 }

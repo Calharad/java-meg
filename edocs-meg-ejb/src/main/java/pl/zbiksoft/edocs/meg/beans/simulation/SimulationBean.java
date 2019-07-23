@@ -6,10 +6,10 @@
 package pl.zbiksoft.edocs.meg.beans.simulation;
 
 import edocs.meg.spec.simulation.SimulationConfig;
+import edocs.meg.spec.util.UniqueRandom;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
@@ -21,6 +21,7 @@ import pl.zbiksoft.edocs.meg.beans.SimulationBeanRemote;
 import pl.zbiksoft.edocs.meg.events.EventSender;
 import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
 import pl.zbiksoft.edocs.meg.local.beans.MachineBeanLocal;
+import pl.zbiksoft.edocs.meg.util.ConfigRandom;
 import pl.zbiksoft.edocs.meg.util.MachineState;
 import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 
@@ -32,18 +33,12 @@ import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 @Stateless
 public class SimulationBean implements SimulationBeanRemote {
 
-    /*
-    TODO:
-    repair rest and add more business methods if needed
-    repair website, split int more pages
-    test test and test
-     */
     @Resource
     private TimerService service;
 
     @EJB
     private EventLogBeanLocal eventLogBean;
-    
+
     @EJB
     private MachineBeanLocal machineBean;
 
@@ -77,7 +72,7 @@ public class SimulationBean implements SimulationBeanRemote {
             machineList.put(m.getMachineId(), m);
         }
     }
-    
+
     private static final Logger LOG = Logger.getLogger(SimulationBean.class.getName());
 
     @Override
@@ -90,7 +85,10 @@ public class SimulationBean implements SimulationBeanRemote {
 
     @Override
     public void stop(int machineId) {
-        machineList.remove(machineId);
+        MachineSimulator ms = machineList.remove(machineId);
+        if (ms != null) {
+            ms.stop();
+        }
     }
 
     @Override
@@ -98,8 +96,9 @@ public class SimulationBean implements SimulationBeanRemote {
         MachineSimulator m = machineList.get(machineId);
         if (m != null) {
             return m.getConfigTO();
+        } else {
+            return null;
         }
-        else return null;
     }
 
     @Override
@@ -118,8 +117,11 @@ public class SimulationBean implements SimulationBeanRemote {
     @Override
     public String getState(int machineId) {
         MachineSimulator m = machineList.get(machineId);
-        if(m != null) return m.getState().name().toLowerCase();
-        else return "";
+        if (m != null) {
+            return m.getState().toString().toLowerCase();
+        } else {
+            return "";
+        }
     }
 
     @Override
@@ -129,11 +131,32 @@ public class SimulationBean implements SimulationBeanRemote {
 
     @Override
     public void stopAllMachines() {
+        stopSimulationMachines();
+        machineList.clear();
         EventSender eventSender = new EventSender(eventLogBean);
         machineBean.getMachines().forEach(m -> eventSender.addEvent(MachineSimulator.STOP_RECORDER, m.getId()));
         eventSender.sendEvents();
     }
-    
-    
+
+    @Override
+    public void startRandomSimulation(int count, SimulationConfig config) {
+        stopAllMachines();
+        UniqueRandom random = new UniqueRandom(machineBean.getMachineIds());
+        if (config == null) {
+            ConfigRandom cfgRandom = new ConfigRandom();
+            for (int i = 0; i < count; i++) {
+                SimulationBaseConfig cfg = cfgRandom.getRandomConfig();
+                cfg.setMachineId(random.nextInt());
+                machineList.put(cfg.getMachineId(), new MachineSimulator(service, sender, cfg));
+            }
+        } else {
+            for (int i = 0; i < count; i++) {
+                SimulationBaseConfig cfg = new SimulationBaseConfig(config);
+                cfg.setMachineId(random.nextInt());
+                machineList.put(cfg.getMachineId(), new MachineSimulator(service, sender, cfg));
+            }
+            machineList.values().forEach(m -> m.start());
+        }
+    }
 
 }

@@ -46,6 +46,7 @@ public class MachineController {
     
     @GET
     @Path("list/count")
+    @Produces(MediaType.TEXT_PLAIN)
     public String getMachineCount() {
         return String.valueOf(machineBean.getMachineCount());
     }

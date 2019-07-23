@@ -6,12 +6,138 @@ and open the template in the editor.
 -->
 <html>
     <head>
-        <title>TODO supply a title</title>
+        <title>Simulation randomizer</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="../static/styles.css" media="screen" />
     </head>
     <body>
-        <div>TODO write content</div>
+        <a href="../index.html">Return</a><br/><br/>
+
+        Machine count: <input type="text" id="count" oninput="check()"/> of <span id="machine-count">0</span><br/>
+        <input type="checkbox" onchange="updateForm()" id="auto-cfg"/> Random config<br/>
+        Start time (hh:mm): <input type="text" value="8:00" id="startTime" class="form"/><br/>
+        End time (hh:mm): <input type="text" value="16:00" id="endTime" class="form"/><br/>
+        Machine usage (0.0-1.0): <input type="text" value="0.5" id="usage" class="form"/><br/>
+        Cycle: <br/>
+        <p class="tab">Average time (ms): <input type="text" value="2000" id="avgCycle" class="form"/></p><br/>
+        <p class="tab">Time interval (ms): <input type="text" value="500" id="cycleInterval" class="form"/></p><br/>
+        <p class="tab">Break between cycles (ms): <input type="text" value="1000" id="cycleBreak" class="form"/></p><br/>
+        Production Interval (secs):<br/>
+        <p class="tab">Min: <input type="text" value="3500" id="minInterval" class="form"/></p><br/>
+        <p class="tab">Max: <input type="text" value="3600" id="maxInterval" class="form"/></p> <br/><br/>
+
+        <p class="important">Caution: Any of below buttons stops all machines in database!</p>
+
+        <button onclick="start()">Start</button><button onclick="stop()">Stop</button>
+
+        <script>
+
+            var link = "/edocs-meg-web/rest/";
+
+            var formElements = document.getElementsByClassName("form");
+
+            var count = 0;
+
+            var countInput = document.getElementById("count");
+
+            var startInput = document.getElementById("startTime");
+            var endInput = document.getElementById("endTime");
+            var usageInput = document.getElementById("usage");
+            var cycleTimeInput = document.getElementById("avgCycle");
+            var intervalTimeInput = document.getElementById("cycleInterval");
+            var cycleBreakInput = document.getElementById("cycleBreak");
+            var minInput = document.getElementById("minInterval");
+            var maxInput = document.getElementById("maxInterval");
+
+            var randomCheckbox = document.getElementById("auto-cfg");
+
+            function check() {
+                if (parseInt(countInput.value) > count)
+                    countInput.value = count;
+            }
+
+            function updateForm() {
+                if (randomCheckbox.checked)
+                    for (e of formElements)
+                        e.setAttribute("disabled", "");
+                else
+                    for (e of formElements)
+                        e.removeAttribute("disabled");
+            }
+            
+            function getObject() {
+                var startTime = startInput.value;
+                var endTime = endInput.value;
+                var usage = usageInput.value;
+                var cycleTime = cycleTimeInput.value;
+                var cycleInterval = intervalTimeInput.value;
+                var cycleBreak = cycleBreakInput.value;
+                var min = minInput.value;
+                var max = maxInput.value;
+
+                if (startTime !== "" && endTime !== "" && usage !== "" && cycleTime !== "" && min !== "" && max !== ""
+                        && cycleInterval !== "" && cycleBreak !== "") {
+                    var minValue = parseInt(min);
+                    var maxValue = parseInt(max);
+                    var usageValue = parseFloat(usage);
+                    var cycleTimeValue = parseInt(cycleTime);
+                    var cycleIntervalValue = parseInt(cycleInterval);
+                    var cycleBreakValue = parseInt(cycleBreak);
+                    if (minValue > 0 && maxValue > 0 && minValue < maxValue && usageValue > 0.0
+                            && usageValue < 1.0 && cycleTimeValue > 0 && cycleIntervalValue > 0
+                            && cycleTimeValue > cycleIntervalValue && cycleBreakValue >= 0
+                            && cycleTimeValue + cycleIntervalValue < maxValue * 1000 / 2) {
+                        return {
+                            startTime: startTime,
+                            stopTime: endTime,
+                            cycleTime: cycleTimeValue,
+                            cycleInterval: cycleIntervalValue,
+                            cycleBreak: cycleBreakValue,
+                            machineUsage: usage,
+                            minInterval: min,
+                            maxInterval: max
+                        };
+                    } else
+                        alert("Incorrect data");
+                } else
+                    alert("Not all rows filled");
+                return null;
+            }
+
+            function start() {
+                var xmlHttp = new XMLHttpRequest();
+                var data = getObject();
+                if (data !== null) {
+                    xmlHttp.open("PUT", link + "simulation/random?"
+                            + randomCheckbox.checked ? "auto=&" : ""
+                            + "count=" + countInput.value, true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(null);
+                }
+            }
+
+            function stop() {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("PUT", link + "simulation/stop/all", true);
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(null);
+            }
+
+            function getMachineCount() {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", link + "machine/list/count", true);
+                xmlHttp.onreadystatechange = function () {
+                    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                        count = parseInt(xmlHttp.responseText);
+                        document.getElementById("machine-count").innerHTML = count;
+                    }
+                };
+                xmlHttp.setRequestHeader("Content-Type", "application/json");
+                xmlHttp.send(null);
+            }
+
+            getMachineCount();
+        </script>
     </body>
 </html>

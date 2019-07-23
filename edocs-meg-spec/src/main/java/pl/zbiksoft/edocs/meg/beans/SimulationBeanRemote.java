@@ -33,4 +33,6 @@ public interface SimulationBeanRemote {
     SimulationConfig getDefaultConfig();
 
     void stopAllMachines();
+
+    void startRandomSimulation(int count, SimulationConfig config);
 }

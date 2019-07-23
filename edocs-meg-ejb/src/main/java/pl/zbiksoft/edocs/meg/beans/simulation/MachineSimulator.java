@@ -20,7 +20,7 @@ import javax.ejb.TimerService;
 import pl.zbiksoft.edocs.meg.events.EventSender;
 import pl.zbiksoft.edocs.meg.util.MachineState;
 import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
-import pl.zbiksoft.edocs.meg.util.StopWatch;
+import edocs.meg.spec.util.StopWatch;
 
 /**
  *
@@ -28,7 +28,7 @@ import pl.zbiksoft.edocs.meg.util.StopWatch;
  */
 public class MachineSimulator {
 
-    private final SimulationBaseConfig config = new SimulationBaseConfig();
+    private SimulationBaseConfig config = new SimulationBaseConfig();
 
     private final StopWatch watch = new StopWatch();
 
@@ -61,6 +61,12 @@ public class MachineSimulator {
         this.config.updateConfig(cfg);
     }
     
+    public MachineSimulator(TimerService service, EventSender sender, SimulationBaseConfig cfg) {
+        this.service = service;
+        this.sender = sender;
+        this.config = cfg;
+    }
+    
     private static final Logger LOG = Logger.getLogger(MachineSimulator.class.getName());
 
     public MachineState getState() {
@@ -81,7 +87,6 @@ public class MachineSimulator {
 
     public void updateConfig(SimulationConfig cfg) {
         if (state != MachineState.STOP) {
-            LOG.log(Level.INFO, "Restarting simulation . . .");
             stop();
             start();
         } else {
@@ -91,7 +96,6 @@ public class MachineSimulator {
     
     public void restartConfig() {
         if (state != MachineState.STOP) {
-            LOG.log(Level.INFO, "Restarting simulation . . .");
             stop();
             SimulationBaseConfig.restartConfig(config);
             start();
@@ -102,29 +106,21 @@ public class MachineSimulator {
 
     public void start() {
         if (state == MachineState.STOP) {
-            LOG.log(Level.INFO, config.toString());
             if (config.getMachineId() > 0) {
                 LocalTime lt = LocalTime.now();
-                LOG.log(Level.INFO, "Actual Time: {0}", lt.toString());
-                LOG.log(Level.INFO, "Start time: {0}", config.getStartTime().toString());
-                LOG.log(Level.INFO, "Stop time: {0}", config.getStopTime().toString());
                 if (config.getStartTime().isBefore(lt) && config.getStopTime().isAfter(lt)) {
-                    LOG.log(Level.INFO, "Starting machine . . .");
                     startSimulation();
                 } else {
-                    LOG.log(Level.INFO, "Setting begin timer . . .");
                     setStartTimer();
-
                 }
             }
         } else {
-            LOG.log(Level.WARNING, "Simulation already started");
+            LOG.log(Level.WARNING, "Machine with id {0} already started", config.getMachineId());
         }
     }
 
     public void stop() {
         if (state != MachineState.STOP) {
-            LOG.log(Level.INFO, "Stopping simulation . . .");
             if(baseTimer != null && baseTimer.getTimeRemaining() > 0) {
                 baseTimer.cancel();
             }
@@ -133,26 +129,23 @@ public class MachineSimulator {
                 cycleTimer.cancel();
             }
             
-            LOG.log(Level.INFO, "Timers stopped");
             productionTime = 0;
             if (state == MachineState.RUN) {
                 sender.addEvent(MACHINE_CYCLE_STOP, config.getMachineId());
-                LOG.log(Level.INFO, "Cycle stopped");
                 sender.addEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
-                LOG.log(Level.INFO, "Production stopped");
             }
             sender.addAndSendEvent(STOP_RECORDER, config.getMachineId());
             state = MachineState.STOP;
-            LOG.log(Level.INFO, "Simulation stopped at {0}", LocalDateTime.now().toString());
+            LOG.log(Level.INFO, "Machine with id {0} has been stopped", config.getMachineId());
         } else {
-            LOG.log(Level.WARNING, "Simulation already stopped");
+            LOG.log(Level.WARNING, "Machine with id {0} already stopped", config.getMachineId());
         }
     }
 
     private void startSimulation() {
         state = MachineState.STOP;
         handleStateChange();
-        LOG.log(Level.INFO, "Simulation started at {0}", LocalDateTime.now().toString());
+        LOG.log(Level.INFO, "Machine with id {0} has been started", config.getMachineId());
 
     }
 
@@ -203,7 +196,6 @@ public class MachineSimulator {
                 break;
             case PAUSE:
                 if (LocalTime.now().isAfter(config.getStopTime())) {
-                    LOG.log(Level.INFO, "Simulation stooped at {0}", LocalDateTime.now().toString());
                     state = MachineState.STOP;
                     sender.addAndSendEvent(STOP_RECORDER, config.getMachineId());
                     setStartTimer();
@@ -245,7 +237,6 @@ public class MachineSimulator {
                     .atZone(ZoneId.systemDefault())
                     .toEpochSecond() * 1000);
         }
-        LOG.log(Level.INFO, "Scheduled start time: {0}", date.toString());
         baseTimer = service.createTimer(date, TimerMode.START_PRODUCTION);
     }
     private enum TimerMode {

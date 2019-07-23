@@ -29,6 +29,10 @@ public class MachineDao extends Dao {
     public Machine getMachineById(int id) {
         return em.find(Machine.class, id);
     }
+    
+    public List<Integer> getMachineIds() {
+        return em.createQuery("select m.id from Machine m").getResultList();
+    }
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")
 }

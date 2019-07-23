@@ -27,3 +27,8 @@ a {
 a:hover {
     color: darkgray;
 }
+
+.important {
+    color: red;
+    font-weight: bold;
+}

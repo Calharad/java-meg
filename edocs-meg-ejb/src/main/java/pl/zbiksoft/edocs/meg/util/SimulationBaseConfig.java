@@ -14,7 +14,7 @@ import java.time.LocalTime;
  * @author ZbikKomp
  */
 public final class SimulationBaseConfig {
-    
+
     public static SimulationBaseConfig restartConfig(SimulationBaseConfig config) {
         config.cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);
         config.interval = new Interval(3500, 3600, Interval.TimeUnit.SECOND);
@@ -25,7 +25,7 @@ public final class SimulationBaseConfig {
         config.cycleBreak = 500;
         return config;
     }
-    
+
     public static SimulationConfig toSimulationConfig(SimulationBaseConfig config) {
         SimulationConfig result = new SimulationConfig();
         result.setCycleBreak(config.getCycleBreak());
@@ -41,7 +41,7 @@ public final class SimulationBaseConfig {
         result.setStopTime(config.getStopTime().toString());
         return result;
     }
-    
+
     private LocalTime startTime = LocalTime.of(8, 0);
 
     private LocalTime stopTime = LocalTime.of(16, 0);
@@ -51,18 +51,18 @@ public final class SimulationBaseConfig {
     private Interval cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);
 
     private Interval interval = new Interval(3500, 3600, Interval.TimeUnit.SECOND);
-    
+
     private int cycleBreak = 500;
 
     private float machineUsage = 0.5F;
 
     public SimulationBaseConfig() {
     }
-    
+
     public SimulationBaseConfig(SimulationConfig cfg) {
         updateConfig(cfg);
     }
-    
+
     public SimulationConfig toSimulationConfig() {
         return SimulationBaseConfig.toSimulationConfig(this);
     }
@@ -70,12 +70,16 @@ public final class SimulationBaseConfig {
     public void updateConfig(SimulationConfig config) {
         setStartTime(config.getStartTime());
         setStopTime(config.getStopTime());
-        setCycleInterval(new Interval(config.getCycleTime() - config.getCycleInterval(), 
+        setCycleInterval(new Interval(config.getCycleTime() - config.getCycleInterval(),
                 config.getCycleTime() + config.getCycleInterval(), Interval.TimeUnit.MILIS));
-        setMachineId(config.getMachine());
-        if(config.getMinInterval() != null)
+        if (config.getMachine() != null) {
+            setMachineId(config.getMachine());
+        }
+        if (config.getMinInterval() != null) {
             setInterval(new Interval(config.getMinInterval(), config.getMaxInterval(), Interval.TimeUnit.SECOND));
-        else setInterval(new Interval(config.getMaxInterval(), Interval.TimeUnit.SECOND));
+        } else {
+            setInterval(new Interval(config.getMaxInterval(), Interval.TimeUnit.SECOND));
+        }
         setMachineUsage(config.getMachineUsage());
         setCycleBreak(config.getCycleBreak());
     }
@@ -151,6 +155,5 @@ public final class SimulationBaseConfig {
                 + "\t\tCycle break: " + cycleBreak + "\n"
                 + "\t\tUsage: " + machineUsage + "\n"; //To change body of generated methods, choose Tools | Templates.
     }
-    
-    
+
 }

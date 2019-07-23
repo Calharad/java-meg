@@ -49,4 +49,9 @@ public class MachineBean implements MachineBeanRemote, MachineBeanLocal {
     public long getMachineCount() {
         return machineDao.getMachineCount();
     }
+
+    @Override
+    public List<Integer> getMachineIds() {
+        return machineDao.getMachineIds();
+    }
 }

@@ -31,7 +31,7 @@ and open the template in the editor.
         <p class="tab">Time interval (ms): <input type="text" value="500" id="cycleInterval"/></p><br/>
         <p class="tab">Break between cycles (ms): <input type="text" value="1000" id="cycleBreak"/></p><br/>
         Production Interval (secs):<br/>
-        <p class="tab">Min: <input type="text" value="3600" id="minInterval"/></p><br/>
+        <p class="tab">Min: <input type="text" value="3500" id="minInterval"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
         State: <div id="state"></div><br/>
         <button onclick="update()">Update config</button>
@@ -236,7 +236,7 @@ and open the template in the editor.
 
             var machineList = JSON.parse(httpGet(link + "machine/list"));
 
-
+            
 
         </script>
     </body>

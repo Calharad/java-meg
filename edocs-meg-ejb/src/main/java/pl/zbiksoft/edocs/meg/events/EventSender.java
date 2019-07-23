@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
-import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 
 /**
  *
