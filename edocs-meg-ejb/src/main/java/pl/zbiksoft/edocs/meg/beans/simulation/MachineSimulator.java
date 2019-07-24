@@ -26,10 +26,8 @@ import pl.zbiksoft.edocs.meg.timer.TimerBeanLocal;
  *
  * @author ZbikKomp
  */
-public class MachineSimulator implements Serializable{
+public class MachineSimulator implements Serializable {
 
-    
-    
     private SimulationBaseConfig config = new SimulationBaseConfig();
 
     private final StopWatch watch = new StopWatch();
@@ -123,19 +121,11 @@ public class MachineSimulator implements Serializable{
 
     public void stop() {
         if (state != MachineState.STOP) {
-            if (baseTimer != null && baseTimer.getTimeRemaining() > 0) {
-                baseTimer.cancel();
-            }
-
-            if (cycleTimer != null && cycleTimer.getTimeRemaining() > 0) {
-                cycleTimer.cancel();
-            }
+            service.removeTimers(getMachineId());
 
             productionTime = 0;
-            if (state == MachineState.RUN) {
-                sender.addEvent(MACHINE_CYCLE_STOP, config.getMachineId());
-                sender.addAndSendEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
-            }
+            sender.addEvent(MACHINE_CYCLE_STOP, config.getMachineId());
+            sender.addAndSendEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
             sender.addAndSendEvent(STOP_RECORDER, config.getMachineId());
             state = MachineState.STOP;
             LOG.log(Level.INFO, "Machine with id {0} has been stopped", config.getMachineId());
@@ -174,14 +164,14 @@ public class MachineSimulator implements Serializable{
         if (productionFinished) {
             handleStateChange();
         } else if (config.getCycleBreak() > 0) {
-            cycleTimer = service.createTimer(this, config.getCycleBreak(), TimerMode.CYCLE_BREAK);
+            cycleTimer = service.createTimer(getMachineId(), config.getCycleBreak(), TimerMode.CYCLE_BREAK);
         } else {
             startCycle();
         }
     }
 
     private void startCycle() {
-        cycleTimer = service.createTimer(this, config.getCycleInterval().getValue(), TimerMode.CYCLE);
+        cycleTimer = service.createTimer(getMachineId(), config.getCycleInterval().getValue(), TimerMode.CYCLE);
         sender.addAndSendEvent(MACHINE_CYCLE_START, config.getMachineId());
     }
 
@@ -191,7 +181,7 @@ public class MachineSimulator implements Serializable{
                 state = MachineState.RUN;
                 sender.addEvent(START_RECORDER, config.getMachineId());
                 productionTime = config.getInterval().getValue() * 1000;
-                baseTimer = service.createTimer(this, productionTime, TimerMode.MANAGE_PRODUCTION);
+                baseTimer = service.createTimer(getMachineId(), productionTime, TimerMode.MANAGE_PRODUCTION);
                 sender.addAndSendEvent(EVENT_PRODUCTION_START, config.getMachineId());
                 startCycle();
                 break;
@@ -203,7 +193,7 @@ public class MachineSimulator implements Serializable{
                 } else {
                     state = MachineState.RUN;
                     productionTime = config.getInterval().getValue() * 1000;
-                    baseTimer = service.createTimer(this, productionTime, TimerMode.MANAGE_PRODUCTION);
+                    baseTimer = service.createTimer(getMachineId(), productionTime, TimerMode.MANAGE_PRODUCTION);
                     sender.addAndSendEvent(EVENT_PRODUCTION_START, config.getMachineId());
                     startCycle();
                 }
@@ -218,7 +208,7 @@ public class MachineSimulator implements Serializable{
                     state = MachineState.PAUSE;
                     float usage = config.getMachineUsage();
                     baseTimer = service
-                            .createTimer(this, (long) ((productionTime + watch.getElapsedTime() - (productionTime + watch.getElapsedTime()) * usage) / usage),
+                            .createTimer(getMachineId(), (long) ((productionTime + watch.getElapsedTime() - (productionTime + watch.getElapsedTime()) * usage) / usage),
                                     TimerMode.MANAGE_PRODUCTION);
                     sender.addAndSendEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
                 }
@@ -238,10 +228,8 @@ public class MachineSimulator implements Serializable{
                     .atZone(ZoneId.systemDefault())
                     .toEpochSecond() * 1000);
         }
-        baseTimer = service.createTimer(this, date, TimerMode.START_PRODUCTION);
+        baseTimer = service.createTimer(getMachineId(), date, TimerMode.START_PRODUCTION);
     }
-
-    
 
     //<editor-fold defaultstate="collapsed" desc="Constants">
     private static final int EVENT_PRODUCTION_START = 2000;

@@ -107,7 +107,7 @@ and open the template in the editor.
             }
             
             function getSelectedMachines() {
-                return machineSelect.options.filter(o => o.selected).map(o => o.value);
+                return Array.from(machineSelect.options).filter(o => o.selected).map(o => o.value);
             }
 
             function getArray() {
@@ -146,6 +146,7 @@ and open the template in the editor.
                                 maxInterval: max,
                                 machine: m
                             });
+                        return list;
                     } else
                         alert("Incorrect data");
                 } else

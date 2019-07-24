@@ -63,14 +63,15 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
 
     @Override
     public void start(SimulationConfig newConfig) {
-
-        if (machineList.containsKey(newConfig.getMachine())) {
-            updateConfig(newConfig);
+        MachineSimulator ms = machineList.get(newConfig.getMachine());
+        if (ms != null) {
+            ms.updateConfig(newConfig);
+            ms.start();
         } else {
-            MachineSimulator m = new MachineSimulator(service, sender);
-            m.updateConfig(newConfig);
-            m.start();
-            machineList.put(m.getMachineId(), m);
+            ms = new MachineSimulator(service, sender);
+            ms.updateConfig(newConfig);
+            ms.start();
+            machineList.put(ms.getMachineId(), ms);
         }
     }
 
@@ -136,8 +137,11 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
         stopSimulationMachines();
         machineList.clear();
         EventSender eventSender = new EventSender(eventLogBean);
-        machineBean.getMachines().forEach(m -> eventSender.addEvent(MachineSimulator.STOP_RECORDER, m.getId()));
-        eventSender.sendEvents();
+        machineBean.getMachines().forEach(m -> {
+            eventSender.addEvent(MachineSimulator.MACHINE_CYCLE_STOP, m.getId());
+            eventSender.addEvent(MachineSimulator.EVENT_PRODUCTION_STOP, m.getId());
+            eventSender.addAndSendEvent(MachineSimulator.STOP_RECORDER, m.getId());
+        });
     }
 
     @Override

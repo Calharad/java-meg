@@ -30,13 +30,13 @@ public class TimerBean implements TimerBeanLocal {
     private TimerService service;
     
     @Override
-    public Timer createTimer(MachineSimulator owner, Date d, TimerMode mode) {
-        return service.createTimer(d, new Pair<>(owner.getConfig().getMachineId(), mode));
+    public Timer createTimer(int owner, Date d, TimerMode mode) {
+        return service.createTimer(d, new Pair<>(owner, mode));
     }
 
     @Override
-    public Timer createTimer(MachineSimulator owner, long d, TimerMode mode) {
-        return service.createTimer(d, new Pair<>(owner.getConfig().getMachineId(), mode));
+    public Timer createTimer(int owner, long d, TimerMode mode) {
+        return service.createTimer(d, new Pair<>(owner, mode));
     }
     
     @Timeout
@@ -44,8 +44,10 @@ public class TimerBean implements TimerBeanLocal {
         Pair p = (Pair) t.getInfo();
         int owner = (Integer) p.getKey();
         TimerMode mode = (TimerMode) p.getValue();
-        
-        simulator.getMachines().get(owner).handleTimeout(mode);
+        MachineSimulator ms = simulator.getMachines().get(owner);
+        if (ms != null) {
+            ms.handleTimeout(mode);
+        }
     }
 
     public enum TimerMode {
@@ -53,5 +55,14 @@ public class TimerBean implements TimerBeanLocal {
         MANAGE_PRODUCTION,
         CYCLE,
         CYCLE_BREAK
+    }
+
+    @Override
+    public void removeTimers(int owner) {
+        service.getTimers().forEach(t -> {
+            Pair p = (Pair) t.getInfo();
+            int v = (Integer)p.getKey();
+            if(v == owner) t.cancel();
+        });
     }
 }

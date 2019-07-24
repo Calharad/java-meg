@@ -94,8 +94,6 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
         ControllerEventTO[] array = events.toArray(new ControllerEventTO[events.size()]);
         Client client = ClientBuilder.newClient();
         WebTarget myTarget = client.target(link + SAVE_EVENTS_ENDPOINT);
-        myTarget.request(MediaType.APPLICATION_JSON)
-                    .post(Entity.json(array));
-
+        myTarget.request().post(Entity.json(array));
     }
 }

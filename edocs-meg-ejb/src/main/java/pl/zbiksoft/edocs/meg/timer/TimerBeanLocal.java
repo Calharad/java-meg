@@ -18,8 +18,10 @@ import pl.zbiksoft.edocs.meg.timer.TimerBean.TimerMode;
 @Local
 public interface TimerBeanLocal {
 
-    Timer createTimer(MachineSimulator owner, Date d, TimerMode mode);
+    Timer createTimer(int owner, Date d, TimerMode mode);
 
-    Timer createTimer(MachineSimulator owner, long d, TimerMode mode);
+    Timer createTimer(int owner, long d, TimerMode mode);
+
+    void removeTimers(int owner);
 
 }

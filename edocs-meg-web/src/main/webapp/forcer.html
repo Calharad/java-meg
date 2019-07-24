@@ -21,6 +21,7 @@ and open the template in the editor.
 
         </select>
         <button onclick="forceEvent()">Force</button>
+        <script src="static/sorter.js"></script>
 
         <script>
             var link = "/edocs-meg-web/";
@@ -54,7 +55,7 @@ and open the template in the editor.
                 var jsonContent = JSON.parse(content);
                 switch (type) {
                     case "machine":
-                        jsonContent.forEach(m => putOption(machineSelect, m.id, m.idDescription));
+                        sort_machines(jsonContent).forEach(m => putOption(machineSelect, m.id, m.idDescription));
                         break;
                     case "event":
                         jsonContent.forEach(e => putOption(eventSelect, e.id, e.acronim));
