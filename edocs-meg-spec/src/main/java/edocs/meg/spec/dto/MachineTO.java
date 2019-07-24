@@ -17,6 +17,8 @@ public class MachineTO {
     
     private String longComment;
     
+    private String idDescription;
+    
     private String objectName;
 
     public MachineTO() {
@@ -63,5 +65,11 @@ public class MachineTO {
         this.objectName = objectName;
     }
 
-    
+    public String getIdDescription() {
+        return idDescription;
+    }
+
+    public void setIdDescription(String idDescription) {
+        this.idDescription = idDescription;
+    }
 }

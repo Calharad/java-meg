@@ -23,7 +23,7 @@ and open the template in the editor.
         Machine: <select id="machines" onchange="setMachine()">
         </select><br/>
         <input type="checkbox" id="update" checked>Update on every machine change<br/>
-        Start time (hh:mm): <input type="text" value="8:00" id="startTime"/><br/>
+        Start time (hh:mm): <input type="text" value="08:00" id="startTime"/><br/>
         End time (hh:mm): <input type="text" value="16:00" id="endTime"/><br/>
         Machine usage (0.0-1.0): <input type="text" value="0.5" id="usage"/><br/>
         Cycle: <br/>
@@ -87,7 +87,7 @@ and open the template in the editor.
             }
 
             function updateHTML(content) {
-                JSON.parse(content).forEach(m => putOption(machineSelect, m.id, m.objectName));
+                JSON.parse(content).forEach(m => putOption(machineSelect, m.id, m.idDescription));
             }
 
             function setMachine() {

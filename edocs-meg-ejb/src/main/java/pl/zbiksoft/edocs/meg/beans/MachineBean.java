@@ -33,6 +33,7 @@ public class MachineBean implements MachineBeanRemote, MachineBeanLocal {
             mTO.setLongComment(m.getLongComment());
             mTO.setShortDescription(m.getShortDescription());
             mTO.setObjectName(m.getObjectName());
+            mTO.setIdDescription(m.getIdDescription());
             result.add(mTO);
         });
         return result;
