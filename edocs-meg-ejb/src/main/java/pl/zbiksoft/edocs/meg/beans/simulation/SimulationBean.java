@@ -12,15 +12,16 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Stateless;
-import javax.ejb.TimerService;
+import javax.inject.Inject;
 import pl.zbiksoft.edocs.meg.beans.SimulationBeanRemote;
 import pl.zbiksoft.edocs.meg.events.EventSender;
 import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
 import pl.zbiksoft.edocs.meg.local.beans.MachineBeanLocal;
+import pl.zbiksoft.edocs.meg.local.beans.SimulationBeanLocal;
+import pl.zbiksoft.edocs.meg.timer.TimerBeanLocal;
 import pl.zbiksoft.edocs.meg.util.ConfigRandom;
 import pl.zbiksoft.edocs.meg.util.MachineState;
 import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
@@ -31,10 +32,10 @@ import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
  */
 @Singleton
 @Stateless
-public class SimulationBean implements SimulationBeanRemote {
+public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal {
 
-    @Resource
-    private TimerService service;
+    @Inject
+    private TimerBeanLocal service;
 
     @EJB
     private EventLogBeanLocal eventLogBean;
@@ -85,9 +86,10 @@ public class SimulationBean implements SimulationBeanRemote {
 
     @Override
     public void stop(int machineId) {
-        MachineSimulator ms = machineList.remove(machineId);
+        MachineSimulator ms = machineList.get(machineId);
         if (ms != null) {
             ms.stop();
+            machineList.remove(machineId);
         }
     }
 
@@ -157,6 +159,11 @@ public class SimulationBean implements SimulationBeanRemote {
             }
             machineList.values().forEach(m -> m.start());
         }
+    }
+
+    @Override
+    public Map<Integer, MachineSimulator> getMachines() {
+        return machineList;
     }
 
 }

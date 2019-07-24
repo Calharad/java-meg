@@ -5,13 +5,14 @@
  */
 package edocs.meg.spec.util;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
  *
  * @author ZbikKomp
  */
-public class Interval {
+public class Interval implements Serializable{
     
     private final int min;
     

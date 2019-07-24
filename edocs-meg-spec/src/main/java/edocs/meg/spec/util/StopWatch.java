@@ -5,11 +5,13 @@
  */
 package edocs.meg.spec.util;
 
+import java.io.Serializable;
+
 /**
  *
  * @author ZbikKomp
  */
-public class StopWatch {
+public class StopWatch implements Serializable{
 
   private long startTime = 0;
   private long stopTime = 0;

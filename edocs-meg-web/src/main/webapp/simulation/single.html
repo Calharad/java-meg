@@ -27,7 +27,7 @@ and open the template in the editor.
 
         Machine: <select id="machines" onchange="setMachine()">
         </select><br/>
-        <input type="checkbox" id="update" checked>Update on every machine change<br/>
+        <input type="checkbox" id="update" checked>Update config on every machine change<br/>
         Start time (hh:mm): <input type="text" value="08:00" id="startTime"/><br/>
         End time (hh:mm): <input type="text" value="16:00" id="endTime"/><br/>
         Machine usage (0.0-1.0): <input type="text" value="0.5" id="usage"/><br/>
@@ -116,8 +116,10 @@ and open the template in the editor.
 
             function startSimulation() {
                 var data = [];
-                data.push(getObject());
-                if (data !== null) {
+                var obj = getObject();
+                
+                if (obj !== null) {
+                    data.push(obj);
                     var xmlHttp = new XMLHttpRequest();
                     xmlHttp.open("PUT", link + "simulation/start", true);
                     xmlHttp.setRequestHeader("Content-Type", "application/json");
@@ -134,8 +136,9 @@ and open the template in the editor.
 
             function update() {
                 var data = [];
-                data.push(getObject());
-                if (data !== null) {
+                obj = getObject();
+                if (obj !== null) {
+                    data.push(obj);
                     var xmlHttp = new XMLHttpRequest();
                     xmlHttp.open("POST", link + "simulation/config/", true);
                     xmlHttp.setRequestHeader("Content-Type", "application/json");

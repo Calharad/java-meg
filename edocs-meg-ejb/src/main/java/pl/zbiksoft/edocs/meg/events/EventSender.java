@@ -7,6 +7,7 @@ package pl.zbiksoft.edocs.meg.events;
 
 import edocs.meg.spec.dto.controller.ControllerEventParameterTO;
 import edocs.meg.spec.dto.controller.ControllerEventTO;
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
  *
  * @author ZbikKomp
  */
-public class EventSender {
+public class EventSender implements Serializable {
 
     public EventSender(EventLogBeanLocal eventLogBean) {
         this.eventLogBean = eventLogBean;

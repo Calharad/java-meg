@@ -7,13 +7,14 @@ package pl.zbiksoft.edocs.meg.util;
 
 import edocs.meg.spec.simulation.SimulationConfig;
 import edocs.meg.spec.util.Interval;
+import java.io.Serializable;
 import java.time.LocalTime;
 
 /**
  *
  * @author ZbikKomp
  */
-public final class SimulationBaseConfig {
+public final class SimulationBaseConfig implements Serializable{
 
     public static SimulationBaseConfig restartConfig(SimulationBaseConfig config) {
         config.cycleInterval = new Interval(1500, 2500, Interval.TimeUnit.MILIS);

@@ -6,7 +6,6 @@
 package pl.zbiksoft.edocs.meg.beans.simulation;
 
 import edocs.meg.spec.simulation.SimulationConfig;
-import edocs.meg.spec.util.Interval;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -14,21 +13,23 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.Timeout;
 import javax.ejb.Timer;
-import javax.ejb.TimerService;
 import pl.zbiksoft.edocs.meg.events.EventSender;
 import pl.zbiksoft.edocs.meg.util.MachineState;
 import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 import edocs.meg.spec.util.StopWatch;
-import javax.ejb.TimedObject;
+import java.io.Serializable;
+import pl.zbiksoft.edocs.meg.timer.TimerBean.TimerMode;
+import pl.zbiksoft.edocs.meg.timer.TimerBeanLocal;
 
 /**
  *
  * @author ZbikKomp
  */
-public class MachineSimulator implements TimedObject {
+public class MachineSimulator implements Serializable{
 
+    
+    
     private SimulationBaseConfig config = new SimulationBaseConfig();
 
     private final StopWatch watch = new StopWatch();
@@ -43,7 +44,7 @@ public class MachineSimulator implements TimedObject {
 
     private long productionTime = 0;
 
-    private final TimerService service;
+    private final TimerBeanLocal service;
 
     private final EventSender sender;
 
@@ -51,18 +52,18 @@ public class MachineSimulator implements TimedObject {
 
     private Timer cycleTimer;
 
-    public MachineSimulator(TimerService service, EventSender sender) {
+    public MachineSimulator(TimerBeanLocal service, EventSender sender) {
         this.service = service;
         this.sender = sender;
     }
 
-    public MachineSimulator(TimerService service, EventSender sender, SimulationConfig cfg) {
+    public MachineSimulator(TimerBeanLocal service, EventSender sender, SimulationConfig cfg) {
         this.service = service;
         this.sender = sender;
         this.config.updateConfig(cfg);
     }
 
-    public MachineSimulator(TimerService service, EventSender sender, SimulationBaseConfig cfg) {
+    public MachineSimulator(TimerBeanLocal service, EventSender sender, SimulationBaseConfig cfg) {
         this.service = service;
         this.sender = sender;
         this.config = cfg;
@@ -133,7 +134,7 @@ public class MachineSimulator implements TimedObject {
             productionTime = 0;
             if (state == MachineState.RUN) {
                 sender.addEvent(MACHINE_CYCLE_STOP, config.getMachineId());
-                sender.addEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
+                sender.addAndSendEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
             }
             sender.addAndSendEvent(STOP_RECORDER, config.getMachineId());
             state = MachineState.STOP;
@@ -150,9 +151,8 @@ public class MachineSimulator implements TimedObject {
 
     }
 
-    @Override
-    public void ejbTimeout(Timer t) {
-        switch ((TimerMode) t.getInfo()) {
+    public void handleTimeout(TimerMode mode) {
+        switch (mode) {
             case START_PRODUCTION:
                 startSimulation();
                 break;
@@ -174,14 +174,14 @@ public class MachineSimulator implements TimedObject {
         if (productionFinished) {
             handleStateChange();
         } else if (config.getCycleBreak() > 0) {
-            cycleTimer = service.createTimer(config.getCycleBreak(), TimerMode.CYCLE_BREAK);
+            cycleTimer = service.createTimer(this, config.getCycleBreak(), TimerMode.CYCLE_BREAK);
         } else {
             startCycle();
         }
     }
 
     private void startCycle() {
-        cycleTimer = service.createTimer(config.getCycleInterval().getValue(), TimerMode.CYCLE);
+        cycleTimer = service.createTimer(this, config.getCycleInterval().getValue(), TimerMode.CYCLE);
         sender.addAndSendEvent(MACHINE_CYCLE_START, config.getMachineId());
     }
 
@@ -191,7 +191,7 @@ public class MachineSimulator implements TimedObject {
                 state = MachineState.RUN;
                 sender.addEvent(START_RECORDER, config.getMachineId());
                 productionTime = config.getInterval().getValue() * 1000;
-                baseTimer = service.createTimer(productionTime, TimerMode.MANAGE_PRODUCTION);
+                baseTimer = service.createTimer(this, productionTime, TimerMode.MANAGE_PRODUCTION);
                 sender.addAndSendEvent(EVENT_PRODUCTION_START, config.getMachineId());
                 startCycle();
                 break;
@@ -203,7 +203,7 @@ public class MachineSimulator implements TimedObject {
                 } else {
                     state = MachineState.RUN;
                     productionTime = config.getInterval().getValue() * 1000;
-                    baseTimer = service.createTimer(productionTime, TimerMode.MANAGE_PRODUCTION);
+                    baseTimer = service.createTimer(this, productionTime, TimerMode.MANAGE_PRODUCTION);
                     sender.addAndSendEvent(EVENT_PRODUCTION_START, config.getMachineId());
                     startCycle();
                 }
@@ -218,7 +218,7 @@ public class MachineSimulator implements TimedObject {
                     state = MachineState.PAUSE;
                     float usage = config.getMachineUsage();
                     baseTimer = service
-                            .createTimer((long) ((productionTime + watch.getElapsedTime() - (productionTime + watch.getElapsedTime()) * usage) / usage),
+                            .createTimer(this, (long) ((productionTime + watch.getElapsedTime() - (productionTime + watch.getElapsedTime()) * usage) / usage),
                                     TimerMode.MANAGE_PRODUCTION);
                     sender.addAndSendEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
                 }
@@ -238,15 +238,10 @@ public class MachineSimulator implements TimedObject {
                     .atZone(ZoneId.systemDefault())
                     .toEpochSecond() * 1000);
         }
-        baseTimer = service.createTimer(date, TimerMode.START_PRODUCTION);
+        baseTimer = service.createTimer(this, date, TimerMode.START_PRODUCTION);
     }
 
-    private enum TimerMode {
-        START_PRODUCTION,
-        MANAGE_PRODUCTION,
-        CYCLE,
-        CYCLE_BREAK
-    }
+    
 
     //<editor-fold defaultstate="collapsed" desc="Constants">
     private static final int EVENT_PRODUCTION_START = 2000;

@@ -15,7 +15,6 @@ and open the template in the editor.
         <a href="index.html">Return</a><br/><br/>
         
         Machine: <select id="machines">
-            <option value="-1" selected>Choose . . .</option>
         </select><br/>
         Force event:<br/>
         <select id="events">
@@ -55,7 +54,7 @@ and open the template in the editor.
                 var jsonContent = JSON.parse(content);
                 switch (type) {
                     case "machine":
-                        jsonContent.forEach(m => putOption(machineSelect, m.id, m.objectName));
+                        jsonContent.forEach(m => putOption(machineSelect, m.id, m.idDescription));
                         break;
                     case "event":
                         jsonContent.forEach(e => putOption(eventSelect, e.id, e.acronim));
@@ -66,7 +65,7 @@ and open the template in the editor.
             function putOption(parent, optionId, optionName) {
                 var option = document.createElement("option");
                 //for testing
-                if (optionId === 3662 && optionName === "dluga3")
+                if (optionId === 3662)
                     option.setAttribute("selected", "");
                 option.setAttribute("value", optionId);
                 var text = document.createTextNode(optionName);
