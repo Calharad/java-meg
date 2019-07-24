@@ -4,7 +4,7 @@ body * {
 select {
     padding: 2px;
     padding-right: 15px;
-    border-radius: 10px;
+    /*border-radius: 5px;*/
 }
 button {
     padding: 5px;

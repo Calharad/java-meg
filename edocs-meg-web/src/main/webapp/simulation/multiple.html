@@ -33,7 +33,8 @@ and open the template in the editor.
         <button onclick="stopSimulation()">Stop selected</button><br/>
         <button onclick="stopSimulationSession()">Stop opened machines</button><br/>
         <button onclick="stopAll()">Stop all machines</button><br/><br/><br/>
-
+        
+        <script src="../static/sorter.js"></script>
         <script>
 
             var link = "/edocs-meg-web/rest/";
@@ -62,7 +63,7 @@ and open the template in the editor.
             }
 
             function updateHTML(content) {
-                JSON.parse(content).forEach(m => putOption(machineSelect, m.id, m.idDescription));
+                sort_machines(JSON.parse(content)).forEach(m => putOption(machineSelect, m.id, m.idDescription));
             }
 
             function putOption(parent, optionId, optionName) {

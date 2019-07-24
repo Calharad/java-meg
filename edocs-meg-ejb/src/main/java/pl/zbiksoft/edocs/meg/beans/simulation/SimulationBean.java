@@ -120,7 +120,7 @@ public class SimulationBean implements SimulationBeanRemote {
         if (m != null) {
             return m.getState().toString().toLowerCase();
         } else {
-            return "";
+            return MachineState.STOP.toString().toLowerCase();
         }
     }
 

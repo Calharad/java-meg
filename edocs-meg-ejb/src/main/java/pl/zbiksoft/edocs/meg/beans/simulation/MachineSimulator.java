@@ -21,12 +21,13 @@ import pl.zbiksoft.edocs.meg.events.EventSender;
 import pl.zbiksoft.edocs.meg.util.MachineState;
 import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 import edocs.meg.spec.util.StopWatch;
+import javax.ejb.TimedObject;
 
 /**
  *
  * @author ZbikKomp
  */
-public class MachineSimulator {
+public class MachineSimulator implements TimedObject {
 
     private SimulationBaseConfig config = new SimulationBaseConfig();
 
@@ -60,13 +61,13 @@ public class MachineSimulator {
         this.sender = sender;
         this.config.updateConfig(cfg);
     }
-    
+
     public MachineSimulator(TimerService service, EventSender sender, SimulationBaseConfig cfg) {
         this.service = service;
         this.sender = sender;
         this.config = cfg;
     }
-    
+
     private static final Logger LOG = Logger.getLogger(MachineSimulator.class.getName());
 
     public MachineState getState() {
@@ -76,7 +77,7 @@ public class MachineSimulator {
     public SimulationBaseConfig getConfig() {
         return config;
     }
-    
+
     public SimulationConfig getConfigTO() {
         return SimulationBaseConfig.toSimulationConfig(config);
     }
@@ -93,7 +94,7 @@ public class MachineSimulator {
             config.updateConfig(cfg);
         }
     }
-    
+
     public void restartConfig() {
         if (state != MachineState.STOP) {
             stop();
@@ -121,14 +122,14 @@ public class MachineSimulator {
 
     public void stop() {
         if (state != MachineState.STOP) {
-            if(baseTimer != null && baseTimer.getTimeRemaining() > 0) {
+            if (baseTimer != null && baseTimer.getTimeRemaining() > 0) {
                 baseTimer.cancel();
             }
-            
-            if(cycleTimer != null && cycleTimer.getTimeRemaining() > 0) {
+
+            if (cycleTimer != null && cycleTimer.getTimeRemaining() > 0) {
                 cycleTimer.cancel();
             }
-            
+
             productionTime = 0;
             if (state == MachineState.RUN) {
                 sender.addEvent(MACHINE_CYCLE_STOP, config.getMachineId());
@@ -149,8 +150,8 @@ public class MachineSimulator {
 
     }
 
-    @Timeout
-    public void handleTimeout(Timer t) {
+    @Override
+    public void ejbTimeout(Timer t) {
         switch ((TimerMode) t.getInfo()) {
             case START_PRODUCTION:
                 startSimulation();
@@ -239,13 +240,14 @@ public class MachineSimulator {
         }
         baseTimer = service.createTimer(date, TimerMode.START_PRODUCTION);
     }
+
     private enum TimerMode {
         START_PRODUCTION,
         MANAGE_PRODUCTION,
         CYCLE,
         CYCLE_BREAK
     }
-    
+
     //<editor-fold defaultstate="collapsed" desc="Constants">
     private static final int EVENT_PRODUCTION_START = 2000;
     static final int EVENT_PRODUCTION_STOP = 2001;

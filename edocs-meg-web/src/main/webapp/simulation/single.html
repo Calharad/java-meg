@@ -15,6 +15,11 @@ and open the template in the editor.
                 border-bottom: 10px;
                 border-top: 10px;
             }
+
+            #state {
+                font-weight: bold;
+                color: blue;
+            }
         </style>
     </head>
     <body>
@@ -33,12 +38,13 @@ and open the template in the editor.
         Production Interval (secs):<br/>
         <p class="tab">Min: <input type="text" value="3500" id="minInterval"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
-        State: <div id="state"></div><br/>
+        <p>State: <span id="state"></span></p><br/>
         <button onclick="update()">Update config</button>
         <button onclick="restart()">Restart config</button><br/>
         <button onclick="startSimulation()">Start</button>
         <button onclick="stopSimulation()">Stop</button><br/><br/><br/><br/>
-
+        
+        <script src="../static/sorter.js"></script>
         <script>
 
             var link = "/edocs-meg-web/rest/";
@@ -87,7 +93,7 @@ and open the template in the editor.
             }
 
             function updateHTML(content) {
-                JSON.parse(content).forEach(m => putOption(machineSelect, m.id, m.idDescription));
+                sort_machines(JSON.parse(content)).forEach(m => putOption(machineSelect, m.id, m.idDescription));
             }
 
             function setMachine() {
@@ -100,7 +106,7 @@ and open the template in the editor.
             function putOption(parent, optionId, optionName) {
                 var option = document.createElement("option");
                 //for testing
-                if (optionId === 3662 && optionName === "dluga3")
+                if (optionId === 3662)
                     option.setAttribute("selected", "");
                 option.setAttribute("value", optionId);
                 var text = document.createTextNode(optionName);
@@ -236,7 +242,7 @@ and open the template in the editor.
 
             var machineList = JSON.parse(httpGet(link + "machine/list"));
 
-            
+
 
         </script>
     </body>
