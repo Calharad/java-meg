@@ -6,6 +6,7 @@
 package pl.zbiksoft.edocs.meg.timer;
 
 import java.util.Date;
+import java.util.logging.Logger;
 import javafx.util.Pair;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
@@ -49,6 +50,7 @@ public class TimerBean implements TimerBeanLocal {
             ms.handleTimeout(mode);
         }
     }
+    private static final Logger LOG = Logger.getLogger(TimerBean.class.getName());
 
     public enum TimerMode {
         START_PRODUCTION,
@@ -56,13 +58,5 @@ public class TimerBean implements TimerBeanLocal {
         CYCLE,
         CYCLE_BREAK
     }
-
-    @Override
-    public void removeTimers(int owner) {
-        service.getTimers().forEach(t -> {
-            Pair p = (Pair) t.getInfo();
-            int v = (Integer)p.getKey();
-            if(v == owner) t.cancel();
-        });
-    }
+    
 }

@@ -32,3 +32,18 @@ a:hover {
     color: red;
     font-weight: bold;
 }
+
+.stop {
+    color: red;
+    font-weight: bold;    
+}
+
+.pause {
+    color: #999900;
+    font-weight: bold;    
+}
+
+.run {
+    color: #00ff00;
+    font-weight: bold;    
+}

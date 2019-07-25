@@ -15,11 +15,6 @@ and open the template in the editor.
                 border-bottom: 10px;
                 border-top: 10px;
             }
-
-            #state {
-                font-weight: bold;
-                color: blue;
-            }
         </style>
     </head>
     <body>
@@ -38,12 +33,12 @@ and open the template in the editor.
         Production Interval (secs):<br/>
         <p class="tab">Min: <input type="text" value="3500" id="minInterval"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
-        <p>State: <span id="state"></span></p><br/>
+        <p>State: <span id="state" class="stop">stop</span></p><br/>
         <button onclick="update()">Update config</button>
         <button onclick="restart()">Restart config</button><br/>
         <button onclick="startSimulation()">Start</button>
         <button onclick="stopSimulation()">Stop</button><br/><br/><br/><br/>
-        
+
         <script src="../static/sorter.js"></script>
         <script>
 
@@ -70,7 +65,12 @@ and open the template in the editor.
                     var xmlHttp = new XMLHttpRequest();
                     xmlHttp.onreadystatechange = function () {
                         if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
-                            state.innerHTML = xmlHttp.responseText;
+                            var s = xmlHttp.responseText;
+                            if (s !== state.innerHTML) {
+                                state.className = '';
+                                state.classList.add(s.toLowerCase());
+                                state.innerHTML = s;
+                            }
                         }
                     };
                     xmlHttp.open("GET", link + "simulation/state/" + machine, true); // false for synchronous request
@@ -117,7 +117,7 @@ and open the template in the editor.
             function startSimulation() {
                 var data = [];
                 var obj = getObject();
-                
+
                 if (obj !== null) {
                     data.push(obj);
                     var xmlHttp = new XMLHttpRequest();

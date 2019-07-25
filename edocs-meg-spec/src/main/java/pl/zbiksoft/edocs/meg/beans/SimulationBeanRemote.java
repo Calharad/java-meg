@@ -5,7 +5,9 @@
  */
 package pl.zbiksoft.edocs.meg.beans;
 
+import edocs.meg.spec.dto.utils.MachineStateTO;
 import edocs.meg.spec.simulation.SimulationConfig;
+import java.util.List;
 import javax.ejb.Remote;
 
 
@@ -35,4 +37,7 @@ public interface SimulationBeanRemote {
     void stopAllMachines();
 
     void startRandomSimulation(int count, SimulationConfig config);
+
+    List<MachineStateTO> getRegisteredMachines();
+
 }

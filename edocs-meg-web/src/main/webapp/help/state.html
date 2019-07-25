@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Show machine states</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="../static/styles.css" media="screen" />
+    </head>
+    <body onload="start()">
+        <div id="list"></div>
+
+        <script>
+
+            var idList = [];
+
+            var list = document.getElementById("list");
+
+            const tab = "     ";
+
+            function buildElement(id, state, link) {
+                var p = document.createElement("p");
+                p.id = "p" + id;
+
+                var idC = document.createElement("span");
+                idC.appendChild(document.createTextNode(id));
+                idC.id = "i" + id;
+
+                var stateC = document.createElement("span");
+                stateC.classList.add(state.toLowerCase());
+                stateC.appendChild(document.createTextNode(state));
+                stateC.id = "s" + id;
+
+                p.appendChild(idC);
+                p.appendChild(document.createTextNode(tab));
+                p.appendChild(stateC);
+                p.appendChild(document.createTextNode(tab));
+
+                if (link != null) {
+                    var linkC = document.createElement("a");
+                    linkC.setAttribute("href", link);
+                    linkC.setAttribute("target", "_blank");
+                    linkC.appendChild(document.createTextNode("Monitoring"));
+                    linkC.id = "u" + id;
+
+                    p.appendChild(linkC);
+                }
+
+                list.appendChild(p);
+            }
+
+            function buildLink(id, link) {
+
+                var p = document.getElementById("p" + id);
+
+                var linkC = document.createElement("a");
+                lickC.setAttribute("href", link);
+                lickC.setAttribute("target", "_blank");
+                lickC.appendChild(document.createTextNode("Monitoring"));
+                lickC.id = "u" + id;
+
+                p.appendChild(linkC);
+
+            }
+
+            function updateElement(id, state, link) {
+                var stateC = document.getElementById("s" + id);
+                if (stateC.innerHTML !== state) {
+                    stateC.className = '';
+                    stateC.classList.add(state.toLowerCase());
+                    stateC.innerHTML = state;
+                }
+                var linkC = document.getElementById("u" + id);
+                if (link == null && linkC != null) {
+                    linkC.remove();
+                } else if (link != null && linkC == null) {
+                    buildLink(id, link);
+                }
+            }
+
+            function updateHTML(json) {
+                var toRemove = [...idList];
+                json.forEach(e => {
+                    var id = e.machineId;
+                    if (idList.includes(id)) {
+                        updateElement(id, e.state, e.url);
+                        remove(toRemove, id);
+                    } else {
+                        buildElement(id, e.state, e.url);
+                        idList.push(id);
+                    }
+                });
+                toRemove.forEach(t => {
+                    remove(idList, t);
+                    element = document.getElementById("p" + t);
+                    if(element != null) {
+                        element.parentNode.removeChild(element);
+                    }
+                });
+            }
+
+            function start() {
+                setInterval(function () {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.onreadystatechange = function () {
+                        if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                            updateHTML(JSON.parse(xmlHttp.responseText));
+                        }
+                    };
+                    xmlHttp.open("GET", "/edocs-meg-web/rest/simulation/registered", true); // false for synchronous request
+                    xmlHttp.send(null);
+                }, 1000);
+            }
+
+            function remove(array, element) {
+                for (var i = 0; i < array.length; i++) {
+                    if (array[i] === element) {
+                        array.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>

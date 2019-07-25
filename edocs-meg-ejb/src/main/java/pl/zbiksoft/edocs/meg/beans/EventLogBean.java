@@ -7,7 +7,6 @@ package pl.zbiksoft.edocs.meg.beans;
 
 import edocs.meg.spec.dto.EventTypeTO;
 import edocs.meg.spec.dto.controller.ControllerEventTO;
-import pl.zbiksoft.edocs.meg.util.DomainConfig;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -26,6 +25,7 @@ import pl.zbiksoft.edocs.meg.entities.EventType;
 import pl.zbiksoft.edocs.meg.entities.EventsLog;
 import pl.zbiksoft.edocs.meg.entities.Machine;
 import pl.zbiksoft.edocs.meg.local.beans.MachineBeanLocal;
+import pl.zbiksoft.edocs.meg.util.ApplicationConnector;
 
 /**
  *
@@ -49,9 +49,8 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
     
     @PostConstruct
     public void init() {
-        link = DomainConfig.Application.getController() != null
-                ? "http://localhost:" + DomainConfig.getNetworkPort() + "/"
-                : DEFAULT_LINK;
+        link = ApplicationConnector.isControllerAvailable()
+                ? ApplicationConnector.LOCALHOST : DEFAULT_LINK;
     }
 
     // Add business logic below. (Right-click in editor and choose
@@ -94,6 +93,6 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
         ControllerEventTO[] array = events.toArray(new ControllerEventTO[events.size()]);
         Client client = ClientBuilder.newClient();
         WebTarget myTarget = client.target(link + SAVE_EVENTS_ENDPOINT);
-        myTarget.request().post(Entity.json(array));
+        myTarget.request(MediaType.TEXT_PLAIN).post(Entity.json(array));
     }
 }

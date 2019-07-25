@@ -5,12 +5,17 @@
  */
 package edocs.meg.web;
 
+import edocs.meg.spec.dto.utils.MachineStateTO;
 import edocs.meg.spec.simulation.SimulationConfig;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -68,13 +73,23 @@ public class SimulationController {
     @PUT
     @Path("stop/all")
     public void stopAll() {
-        simulationBean.stopAllMachines();
+        LOG.log(Level.WARNING, "Blocked REST: stop/all");
+        //simulationBean.stopAllMachines();
+        
     }
 
     @GET
     @Path("config/{id}")
     public SimulationConfig getConfig(@PathParam("id") Integer id) {
         return simulationBean.getConfig(id);
+    }
+    
+    @GET
+    @Path("registered")
+    public List<MachineStateTO> getRegistered() {
+        List<MachineStateTO> result = simulationBean.getRegisteredMachines();
+        result.sort(Comparator.naturalOrder());
+        return result;
     }
 
     @GET
@@ -104,7 +119,7 @@ public class SimulationController {
 
     @PUT
     @Path("random")
-    public void startRandomSimulation(@QueryParam("auto") Boolean auto, @QueryParam("count") Integer count, SimulationConfig config) {
-        
+    public void startRandomSimulation(@QueryParam("auto") @DefaultValue("true") String auto, @QueryParam("count") Integer count, SimulationConfig config) {
+        simulationBean.startRandomSimulation(count, (auto.equals("true") ? null : config));
     }
 }

@@ -22,6 +22,4 @@ public interface TimerBeanLocal {
 
     Timer createTimer(int owner, long d, TimerMode mode);
 
-    void removeTimers(int owner);
-
 }

@@ -46,25 +46,33 @@ public class MachineSimulator implements Serializable {
 
     private final EventSender sender;
 
+    private String url;
+
     private Timer baseTimer;
 
     private Timer cycleTimer;
 
-    public MachineSimulator(TimerBeanLocal service, EventSender sender) {
+    private MachineSimulator(TimerBeanLocal service, EventSender sender) {
         this.service = service;
         this.sender = sender;
     }
 
     public MachineSimulator(TimerBeanLocal service, EventSender sender, SimulationConfig cfg) {
-        this.service = service;
-        this.sender = sender;
+        this(service, sender);
         this.config.updateConfig(cfg);
+        //url = ApplicationConnector.LOCALHOST
+        url = "http://192.168.30.3:38080/"
+                + "edocs-monitoring/secure/monitoring/machineDashboard.jsf?id=" + getMachineId();
+
     }
 
     public MachineSimulator(TimerBeanLocal service, EventSender sender, SimulationBaseConfig cfg) {
-        this.service = service;
-        this.sender = sender;
+        this(service, sender);
         this.config = cfg;
+        //url = ApplicationConnector.LOCALHOST
+        url = "http://192.168.30.3:38080/"
+                + "edocs-monitoring/secure/monitoring/machineDashboard.jsf?id=" + getMachineId();
+
     }
 
     private static final Logger LOG = Logger.getLogger(MachineSimulator.class.getName());
@@ -81,8 +89,12 @@ public class MachineSimulator implements Serializable {
         return SimulationBaseConfig.toSimulationConfig(config);
     }
 
-    public int getMachineId() {
+    public final int getMachineId() {
         return config.getMachineId();
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     public void updateConfig(SimulationConfig cfg) {
@@ -121,16 +133,13 @@ public class MachineSimulator implements Serializable {
 
     public void stop() {
         if (state != MachineState.STOP) {
-            service.removeTimers(getMachineId());
-
+            state = MachineState.STOP;
             productionTime = 0;
             sender.addEvent(MACHINE_CYCLE_STOP, config.getMachineId());
             sender.addAndSendEvent(EVENT_PRODUCTION_STOP, config.getMachineId());
             sender.addAndSendEvent(STOP_RECORDER, config.getMachineId());
-            state = MachineState.STOP;
+
             LOG.log(Level.INFO, "Machine with id {0} has been stopped", config.getMachineId());
-        } else {
-            LOG.log(Level.WARNING, "Machine with id {0} already stopped", config.getMachineId());
         }
     }
 
@@ -142,19 +151,21 @@ public class MachineSimulator implements Serializable {
     }
 
     public void handleTimeout(TimerMode mode) {
-        switch (mode) {
-            case START_PRODUCTION:
-                startSimulation();
-                break;
-            case MANAGE_PRODUCTION:
-                handleStateChange();
-                break;
-            case CYCLE:
-                finishCycle();
-                break;
-            case CYCLE_BREAK:
-                startCycle();
-                break;
+        if (state != MachineState.STOP) {
+            switch (mode) {
+                case START_PRODUCTION:
+                    startSimulation();
+                    break;
+                case MANAGE_PRODUCTION:
+                    handleStateChange();
+                    break;
+                case CYCLE:
+                    finishCycle();
+                    break;
+                case CYCLE_BREAK:
+                    startCycle();
+                    break;
+            }
         }
     }
 

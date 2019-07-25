@@ -98,15 +98,9 @@ public class DomainConfig {
     }
 
     public static List<String> getApplicationList() {
-        List<String> result = new ArrayList();
-        NodeList list = getApplicationListNode();
-        for (int i = 0; i < list.getLength(); i++) {
-            Node n = list.item(i);
-            if(n instanceof Element) {
-                result.add(((Element) n).getAttribute("name"));
-            }
-        }
-        return result;
+        return getApplicationRefs().stream().collect(Collectors.toMap((n -> n.getAttribute("ref")), (n -> n.getAttribute("enabled"))))
+                .entrySet().stream().filter(x -> x.getValue().equals("")).map(x -> x.getKey())
+                .collect(Collectors.toList());
     }
 
     public static NodeList getApplicationListNode() {
@@ -115,6 +109,26 @@ public class DomainConfig {
 
     public static String getURLString(String port, String endpoint) {
         return "http://localhost:" + port + "/" + endpoint;
+    }
+    
+    public static Node getServerRefs() {
+        return getNodeByTagNameAndAttributeValue(getNodeByTagName(xmlDomain.getDocumentElement().getChildNodes(), "servers").getChildNodes(), 
+                "server", "config-ref", "server-config");
+    }
+    
+    public static List<Element> getApplicationRefs() {
+        List<Element> result = new ArrayList<>();
+        NodeList nl = getServerRefs().getChildNodes();
+        
+        for(int i=0; i<nl.getLength();i++) {
+            Node n = nl.item(i);
+            if(n instanceof Element) {
+                if("application-ref".equals(((Element) n).getTagName())) {
+                    result.add((Element)n);
+                }
+            }
+        }
+        return result;
     }
 
     private static Node getNodeByTagName(NodeList list, String tag) {
@@ -125,7 +139,7 @@ public class DomainConfig {
         }
         return null;
     }
-
+    
     private static Node getNodeByAttributeValue(NodeList list, String attributeName, String attributeValue) {
         for (int i = 0; i < list.getLength(); i++) {
             Node n = list.item(i);
@@ -148,7 +162,15 @@ public class DomainConfig {
     public static class Application {
 
         public static String getController() {
-            List<String> apps = getApplicationList().stream().filter(a -> a.toLowerCase().startsWith("edocs-controller"))
+            return getApplication("edocs-controller-ear");
+        }
+        
+        public static String getMonitoring() {
+            return getApplication("edocs-monitoring-ear");
+        }
+        
+        private static String getApplication(String name) {
+            List<String> apps = getApplicationList().stream().filter(a -> a.toLowerCase().startsWith(name))
                     .collect(Collectors.toList());
             if (apps.size() > 0) {
                 return apps.get(0);

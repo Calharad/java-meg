@@ -5,9 +5,12 @@
  */
 package pl.zbiksoft.edocs.meg.beans.simulation;
 
+import edocs.meg.spec.dto.utils.MachineStateTO;
 import edocs.meg.spec.simulation.SimulationConfig;
 import edocs.meg.spec.util.UniqueRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -22,6 +25,7 @@ import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
 import pl.zbiksoft.edocs.meg.local.beans.MachineBeanLocal;
 import pl.zbiksoft.edocs.meg.local.beans.SimulationBeanLocal;
 import pl.zbiksoft.edocs.meg.timer.TimerBeanLocal;
+import pl.zbiksoft.edocs.meg.util.ApplicationConnector;
 import pl.zbiksoft.edocs.meg.util.ConfigRandom;
 import pl.zbiksoft.edocs.meg.util.MachineState;
 import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
@@ -68,8 +72,7 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
             ms.updateConfig(newConfig);
             ms.start();
         } else {
-            ms = new MachineSimulator(service, sender);
-            ms.updateConfig(newConfig);
+            ms = new MachineSimulator(service, sender, newConfig);
             ms.start();
             machineList.put(ms.getMachineId(), ms);
         }
@@ -90,7 +93,7 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
         MachineSimulator ms = machineList.get(machineId);
         if (ms != null) {
             ms.stop();
-            machineList.remove(machineId);
+            //machineList.remove(machineId);
         }
     }
 
@@ -140,28 +143,33 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
         machineBean.getMachines().forEach(m -> {
             eventSender.addEvent(MachineSimulator.MACHINE_CYCLE_STOP, m.getId());
             eventSender.addEvent(MachineSimulator.EVENT_PRODUCTION_STOP, m.getId());
-            eventSender.addAndSendEvent(MachineSimulator.STOP_RECORDER, m.getId());
+            eventSender.addEvent(MachineSimulator.STOP_RECORDER, m.getId());
         });
+        eventSender.sendEvents();
     }
 
     @Override
     public void startRandomSimulation(int count, SimulationConfig config) {
-        stopAllMachines();
+        //stopAllMachines();
+        stopSimulationMachines();
         UniqueRandom random = new UniqueRandom(machineBean.getMachineIds());
         if (config == null) {
             ConfigRandom cfgRandom = new ConfigRandom();
             for (int i = 0; i < count; i++) {
                 SimulationBaseConfig cfg = cfgRandom.getRandomConfig();
                 cfg.setMachineId(random.nextInt());
-                machineList.put(cfg.getMachineId(), new MachineSimulator(service, sender, cfg));
+                MachineSimulator ms = new MachineSimulator(service, sender, cfg);
+                ms.start();
+                machineList.put(cfg.getMachineId(), ms);
             }
         } else {
             for (int i = 0; i < count; i++) {
                 SimulationBaseConfig cfg = new SimulationBaseConfig(config);
                 cfg.setMachineId(random.nextInt());
-                machineList.put(cfg.getMachineId(), new MachineSimulator(service, sender, cfg));
+                MachineSimulator ms = new MachineSimulator(service, sender, cfg);
+                ms.start();
+                machineList.put(cfg.getMachineId(), ms);
             }
-            machineList.values().forEach(m -> m.start());
         }
     }
 
@@ -169,5 +177,24 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
     public Map<Integer, MachineSimulator> getMachines() {
         return machineList;
     }
+
+    @Override
+    public List<MachineStateTO> getRegisteredMachines() {
+        List<MachineStateTO> result = new ArrayList<>();
+        machineList.values().forEach(m -> {
+            MachineStateTO ms = new MachineStateTO();
+            ms.setState(m.getState().toString());
+            ms.setMachineId(m.getMachineId());
+            if(ApplicationConnector.isMonitoringAvailable()) {
+                ms.setUrl(m.getUrl());
+            }
+            result.add(ms);
+        });
+        return result;
+    }
+
+
+    
+    
 
 }

@@ -14,9 +14,9 @@ and open the template in the editor.
     <body>
         <a href="../index.html">Return</a><br/><br/>
 
-        Machine count: <input type="text" id="count" oninput="check()"/> of <span id="machine-count">0</span><br/>
+        Machine count: <input type="text" value="0" id="count" oninput="check()"/> of <span id="machine-count">0</span><br/>
         <input type="checkbox" onchange="updateForm()" id="auto-cfg"/> Random config<br/>
-        Start time (hh:mm): <input type="text" value="8:00" id="startTime" class="form"/><br/>
+        Start time (hh:mm): <input type="text" value="08:00" id="startTime" class="form"/><br/>
         End time (hh:mm): <input type="text" value="16:00" id="endTime" class="form"/><br/>
         Machine usage (0.0-1.0): <input type="text" value="0.5" id="usage" class="form"/><br/>
         Cycle: <br/>
@@ -27,7 +27,9 @@ and open the template in the editor.
         <p class="tab">Min: <input type="text" value="3500" id="minInterval" class="form"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval" class="form"/></p> <br/><br/>
 
-        <p class="important">Caution: Any of below buttons stops all machines in database!</p>
+        <p class="important">Caution: Any of below buttons stops all active machines!</p>
+        <p class="important">Warning: Wait few seconds after clicking stop, otherwise server might freeze</p>
+        <p class="important">Warning: For now, never click start twice!!!</p>
 
         <button onclick="start()">Start</button><button onclick="stop()">Stop</button>
 
@@ -65,7 +67,7 @@ and open the template in the editor.
                     for (e of formElements)
                         e.removeAttribute("disabled");
             }
-            
+
             function getObject() {
                 var startTime = startInput.value;
                 var endTime = endInput.value;
@@ -108,18 +110,19 @@ and open the template in the editor.
             function start() {
                 var xmlHttp = new XMLHttpRequest();
                 var data = getObject();
-                if (data !== null) {
-                    xmlHttp.open("PUT", link + "simulation/random?"
-                            + randomCheckbox.checked ? "auto=&" : ""
-                            + "count=" + countInput.value, true);
+                if (data !== null && countInput.value > 0) {
+                    xmlHttp.open("PUT", link + "simulation/random?auto="
+                            + (randomCheckbox.checked ? "true" : "false")
+                            + "&count=" + countInput.value, true);
                     xmlHttp.setRequestHeader("Content-Type", "application/json");
-                    xmlHttp.send(null);
+                    xmlHttp.send(JSON.stringify(data));
                 }
             }
 
             function stop() {
                 var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("PUT", link + "simulation/stop/all", true);
+                //xmlHttp.open("PUT", link + "simulation/stop/all", true);
+                xmlHttp.open("PUT", link + "simulation/stop/active", true);
                 xmlHttp.setRequestHeader("Content-Type", "application/json");
                 xmlHttp.send(null);
             }
