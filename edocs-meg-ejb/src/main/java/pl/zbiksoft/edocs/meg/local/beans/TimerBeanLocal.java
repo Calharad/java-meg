@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package pl.zbiksoft.edocs.meg.timer;
+package pl.zbiksoft.edocs.meg.local.beans;
 
 import java.util.Date;
 import javax.ejb.Local;

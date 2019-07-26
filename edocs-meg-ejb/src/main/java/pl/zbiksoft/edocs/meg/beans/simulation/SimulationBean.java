@@ -24,7 +24,7 @@ import pl.zbiksoft.edocs.meg.events.EventSender;
 import pl.zbiksoft.edocs.meg.local.beans.EventLogBeanLocal;
 import pl.zbiksoft.edocs.meg.local.beans.MachineBeanLocal;
 import pl.zbiksoft.edocs.meg.local.beans.SimulationBeanLocal;
-import pl.zbiksoft.edocs.meg.timer.TimerBeanLocal;
+import pl.zbiksoft.edocs.meg.local.beans.TimerBeanLocal;
 import pl.zbiksoft.edocs.meg.util.ApplicationConnector;
 import pl.zbiksoft.edocs.meg.util.ConfigRandom;
 import pl.zbiksoft.edocs.meg.util.MachineState;
@@ -151,7 +151,7 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
     @Override
     public void startRandomSimulation(int count, SimulationConfig config) {
         //stopAllMachines();
-        stopSimulationMachines();
+        //stopSimulationMachines();
         UniqueRandom random = new UniqueRandom(machineBean.getMachineIds());
         if (config == null) {
             ConfigRandom cfgRandom = new ConfigRandom();

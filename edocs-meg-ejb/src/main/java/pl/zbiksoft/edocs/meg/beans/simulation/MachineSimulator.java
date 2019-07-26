@@ -20,7 +20,7 @@ import pl.zbiksoft.edocs.meg.util.SimulationBaseConfig;
 import edocs.meg.spec.util.StopWatch;
 import java.io.Serializable;
 import pl.zbiksoft.edocs.meg.timer.TimerBean.TimerMode;
-import pl.zbiksoft.edocs.meg.timer.TimerBeanLocal;
+import pl.zbiksoft.edocs.meg.local.beans.TimerBeanLocal;
 
 /**
  *

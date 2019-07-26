@@ -12,6 +12,7 @@ and open the template in the editor.
         <link rel="stylesheet" type="text/css" href="../static/styles.css" media="screen" />
     </head>
     <body onload="start()">
+        <p class=""><input type="checkbox" checked onchange="changeState()"/>Show stopped machines</p>
         <div id="list"></div>
 
         <script>
@@ -21,6 +22,12 @@ and open the template in the editor.
             var list = document.getElementById("list");
 
             const tab = "     ";
+            
+            var showStopped = true;
+            
+            function changeState() {
+                showStopped = !showStopped;
+            }
 
             function buildElement(id, state, link) {
                 var p = document.createElement("p");
@@ -84,8 +91,10 @@ and open the template in the editor.
 
             function updateHTML(json) {
                 var toRemove = [...idList];
+                const show = showStopped;
                 json.forEach(e => {
                     var id = e.machineId;
+                    if(!showStopped && e.state === "STOP") return;
                     if (idList.includes(id)) {
                         updateElement(id, e.state, e.url);
                         remove(toRemove, id);

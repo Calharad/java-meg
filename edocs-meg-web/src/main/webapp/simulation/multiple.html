@@ -33,7 +33,7 @@ and open the template in the editor.
         <button onclick="stopSimulation()">Stop selected</button><br/>
         <button onclick="stopSimulationSession()">Stop simulated machines</button><br/>
         <button hidden onclick="stopAll()">Stop all machines</button><br/><br/><br/>
-        
+
         <script src="../static/sorter.js"></script>
         <script>
 
@@ -89,7 +89,8 @@ and open the template in the editor.
 
             function stopSimulation() {
                 var machines = getSelectedMachines();
-                if(machines.length <= 0) return;
+                if (machines.length <= 0)
+                    return;
                 var xmlHttp = new XMLHttpRequest();
                 xmlHttp.open("PUT", link + "simulation/stop", true);
                 xmlHttp.setRequestHeader("Content-Type", "application/json");
@@ -105,7 +106,7 @@ and open the template in the editor.
                     xmlHttp.send(JSON.stringify(data));
                 }
             }
-            
+
             function getSelectedMachines() {
                 return Array.from(machineSelect.options).filter(o => o.selected).map(o => o.value);
             }
@@ -155,10 +156,12 @@ and open the template in the editor.
             }
 
             function stopSimulationSession() {
-                var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("PUT", link + "simulation/stop/active", true);
-                xmlHttp.setRequestHeader("Content-Type", "application/json");
-                xmlHttp.send(null);
+                if (confirm("It will stop all active machines, even not started by you! Continue?")) {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("PUT", link + "simulation/stop/active", true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(null);
+                }
             }
 
             function stopAll() {
@@ -173,7 +176,8 @@ and open the template in the editor.
 
             function restart() {
                 var machines = getSelectedMachines();
-                if(machines.length <= 0) return;
+                if (machines.length <= 0)
+                    return;
                 var xmlHttp = new XMLHttpRequest();
                 xmlHttp.open("PUT", link + "simulation/config/restart", true);
                 xmlHttp.setRequestHeader("Content-Type", "application/json");

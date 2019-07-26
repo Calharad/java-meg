@@ -5,12 +5,14 @@
  */
 package pl.zbiksoft.edocs.meg.timer;
 
+import pl.zbiksoft.edocs.meg.local.beans.TimerBeanLocal;
 import java.util.Date;
 import java.util.logging.Logger;
 import javafx.util.Pair;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerService;
@@ -21,9 +23,10 @@ import pl.zbiksoft.edocs.meg.local.beans.SimulationBeanLocal;
  *
  * @author ZbikKomp
  */
-@Singleton
+@Stateless
 public class TimerBean implements TimerBeanLocal {
 
+    
     @EJB
     private SimulationBeanLocal simulator;
     
@@ -32,12 +35,14 @@ public class TimerBean implements TimerBeanLocal {
     
     @Override
     public Timer createTimer(int owner, Date d, TimerMode mode) {
-        return service.createTimer(d, new Pair<>(owner, mode));
+        Timer t = service.createTimer(d, new Pair<>(owner, mode));
+        return t;
     }
 
     @Override
     public Timer createTimer(int owner, long d, TimerMode mode) {
-        return service.createTimer(d, new Pair<>(owner, mode));
+        Timer t = service.createTimer(d, new Pair<>(owner, mode));
+        return t;
     }
     
     @Timeout

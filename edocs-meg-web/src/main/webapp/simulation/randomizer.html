@@ -27,9 +27,7 @@ and open the template in the editor.
         <p class="tab">Min: <input type="text" value="3500" id="minInterval" class="form"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval" class="form"/></p> <br/><br/>
 
-        <p class="important">Caution: Any of below buttons stops all active machines!</p>
-        <p class="important">Warning: Wait few seconds after clicking stop, otherwise server might freeze</p>
-        <p class="important">Warning: For now, never click start twice!!!</p>
+        <p class="important">Caution: Stop button stops all active machines, even not started by you!</p>
 
         <button onclick="start()">Start</button><button onclick="stop()">Stop</button>
 
@@ -40,6 +38,8 @@ and open the template in the editor.
             var formElements = document.getElementsByClassName("form");
 
             var count = 0;
+
+            var working = false;
 
             var countInput = document.getElementById("count");
 
@@ -108,23 +108,41 @@ and open the template in the editor.
             }
 
             function start() {
-                var xmlHttp = new XMLHttpRequest();
-                var data = getObject();
-                if (data !== null && countInput.value > 0) {
-                    xmlHttp.open("PUT", link + "simulation/random?auto="
-                            + (randomCheckbox.checked ? "true" : "false")
-                            + "&count=" + countInput.value, true);
-                    xmlHttp.setRequestHeader("Content-Type", "application/json");
-                    xmlHttp.send(JSON.stringify(data));
+                if (!working) {
+                    working = true;
+                    var xmlHttp = new XMLHttpRequest();
+                    var data = getObject();
+                    if (data !== null && countInput.value > 0) {
+                        xmlHttp.open("PUT", link + "simulation/random?auto="
+                                + (randomCheckbox.checked ? "true" : "false")
+                                + "&count=" + countInput.value, true);
+                        xmlHttp.onreadystatechange = () => {
+                            if (xmlHttp.readyState === 4) {
+                                working = false;
+                            }
+                        };
+                        xmlHttp.setRequestHeader("Content-Type", "application/json");
+                        xmlHttp.send(JSON.stringify(data));
+                    }
                 }
+                else alert("Work already in progress");
             }
 
             function stop() {
-                var xmlHttp = new XMLHttpRequest();
-                //xmlHttp.open("PUT", link + "simulation/stop/all", true);
-                xmlHttp.open("PUT", link + "simulation/stop/active", true);
-                xmlHttp.setRequestHeader("Content-Type", "application/json");
-                xmlHttp.send(null);
+                if (!working) {
+                    working = true;
+                    var xmlHttp = new XMLHttpRequest();
+                    //xmlHttp.open("PUT", link + "simulation/stop/all", true);
+                    xmlHttp.open("PUT", link + "simulation/stop/active", true);
+                    xmlHttp.onreadystatechange = () => {
+                        if (xmlHttp.readyState === 4) {
+                            working = false;
+                        }
+                    };
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(null);
+                }
+                else alert("Work already in progress");
             }
 
             function getMachineCount() {
