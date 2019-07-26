@@ -51,6 +51,12 @@ public class SimulationController {
     public void startSimulation(SimulationConfig[] configs) {
         Arrays.asList(configs).forEach(c -> simulationBean.start(c));
     }
+    
+    @PUT
+    @Path("start/{id}")
+    public void startSimulation(@PathParam("id") Integer id) {
+        simulationBean.start(id);
+    }
 
     @PUT
     @Path("stop/{id}")

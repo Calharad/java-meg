@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -191,6 +192,16 @@ public class SimulationBean implements SimulationBeanRemote, SimulationBeanLocal
             result.add(ms);
         });
         return result;
+    }
+
+    @Override
+    public void start(int machineId) {
+        MachineSimulator ms = machineList.get(machineId);
+        if (ms != null) {
+            ms.start();
+        } else {
+            LOG.log(Level.WARNING, "Machine with id {0} not found", machineId);
+        }
     }
 
 

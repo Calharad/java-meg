@@ -100,6 +100,7 @@ public class MachineSimulator implements Serializable {
     public void updateConfig(SimulationConfig cfg) {
         if (state != MachineState.STOP) {
             stop();
+            updateConfig(cfg);
             start();
         } else {
             config.updateConfig(cfg);
@@ -114,6 +115,11 @@ public class MachineSimulator implements Serializable {
         } else {
             SimulationBaseConfig.restartConfig(config);
         }
+    }
+    
+    public void start(SimulationConfig cfg) {
+        updateConfig(cfg);
+        start();
     }
 
     public void start() {

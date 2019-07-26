@@ -10,6 +10,11 @@ and open the template in the editor.
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="../static/styles.css" media="screen" />
+        <style>
+            button {
+                padding: 3px;
+            }
+        </style>
     </head>
     <body onload="start()">
         <p class=""><input type="checkbox" checked onchange="changeState()"/>Show stopped machines</p>
@@ -22,9 +27,9 @@ and open the template in the editor.
             var list = document.getElementById("list");
 
             const tab = "     ";
-            
+
             var showStopped = true;
-            
+
             function changeState() {
                 showStopped = !showStopped;
             }
@@ -42,6 +47,12 @@ and open the template in the editor.
                 stateC.appendChild(document.createTextNode(state));
                 stateC.id = "s" + id;
 
+                var button = document.createElement("button");
+                button.addEventListener("click", () => changeState(id));
+                button.appendChild(document.createTextNode("STOP"));
+                button.id = "b" + id;
+                
+
                 p.appendChild(idC);
                 p.appendChild(document.createTextNode(tab));
                 p.appendChild(stateC);
@@ -56,6 +67,8 @@ and open the template in the editor.
 
                     p.appendChild(linkC);
                 }
+                
+                p.appendChild(button);
 
                 list.appendChild(p);
             }
@@ -74,6 +87,14 @@ and open the template in the editor.
 
             }
 
+            function changeState(id) {
+                var button = document.getElementById("b" + id);
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("PUT", "/edocs-meg-web/rest/simulation/" 
+                        + button.innerHTML.toLowerCase() + "/" + id, true);
+                xmlHttp.send(null);
+            }
+
             function updateElement(id, state, link) {
                 var stateC = document.getElementById("s" + id);
                 if (stateC.innerHTML !== state) {
@@ -87,6 +108,14 @@ and open the template in the editor.
                 } else if (link != null && linkC == null) {
                     buildLink(id, link);
                 }
+                
+                var button = document.getElementById("b" + id);
+                if(button.innerHTML === "STOP" && state === "STOP") {
+                    button.innerHTML = "START";
+                }
+                else if (button.innerHTML !== "STOP" && state !== "STOP") {
+                    button.innerHTML = "STOP";
+                }
             }
 
             function updateHTML(json) {
@@ -94,7 +123,8 @@ and open the template in the editor.
                 const show = showStopped;
                 json.forEach(e => {
                     var id = e.machineId;
-                    if(!showStopped && e.state === "STOP") return;
+                    if (!showStopped && e.state === "STOP")
+                        return;
                     if (idList.includes(id)) {
                         updateElement(id, e.state, e.url);
                         remove(toRemove, id);
@@ -106,7 +136,7 @@ and open the template in the editor.
                 toRemove.forEach(t => {
                     remove(idList, t);
                     element = document.getElementById("p" + t);
-                    if(element != null) {
+                    if (element != null) {
                         element.parentNode.removeChild(element);
                     }
                 });

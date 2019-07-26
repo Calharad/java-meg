@@ -40,4 +40,6 @@ public interface SimulationBeanRemote {
 
     List<MachineStateTO> getRegisteredMachines();
 
+    void start(int machineId);
+
 }

@@ -26,8 +26,8 @@ public class ApplicationConnector {
         if (isMonitoring == null) {
             isMonitoring = DomainConfig.Application.getMonitoring()!= null;
         }
-        //return isMonitoring;
         return true;
+        //return isMonitoring;
     }
     
     public static final String PORT = DomainConfig.getNetworkPort();
