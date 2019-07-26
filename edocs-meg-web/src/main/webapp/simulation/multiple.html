@@ -27,6 +27,9 @@ and open the template in the editor.
         Production Interval (secs):<br/>
         <p class="tab">Min: <input type="text" value="3500" id="minInterval"/></p><br/>
         <p class="tab">Max: <input type="text" value="3600" id="maxInterval"/></p> <br/>
+
+        <div id="working" class="important tab" hidden>Working . . .</div>
+
         <button onclick="update()">Update config</button>
         <button onclick="restart()">Restart config</button><br/>
         <button onclick="startSimulation()">Start selected</button>
@@ -41,6 +44,9 @@ and open the template in the editor.
 
             var machineSelect = document.getElementById("machines");
             var startInput = document.getElementById("startTime");
+
+            var working = false;
+
             var endInput = document.getElementById("endTime");
             var usageInput = document.getElementById("usage");
             var cycleTimeInput = document.getElementById("avgCycle");
@@ -48,6 +54,8 @@ and open the template in the editor.
             var cycleBreakInput = document.getElementById("cycleBreak");
             var minInput = document.getElementById("minInterval");
             var maxInput = document.getElementById("maxInterval");
+
+            var workDiv = document.getElementById("working");
 
             function httpGet(myUrl)
             {
@@ -78,33 +86,67 @@ and open the template in the editor.
             }
 
             function startSimulation() {
-                var data = getArray();
-                if (data !== null && data.length > 0) {
-                    var xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open("PUT", link + "simulation/start", true);
-                    xmlHttp.setRequestHeader("Content-Type", "application/json");
-                    xmlHttp.send(JSON.stringify(data));
-                }
+                if (!working) {
+                    working = true;
+                    workDiv.removeAttribute("hidden");
+                    var data = getArray();
+                    if (data !== null && data.length > 0) {
+                        var xmlHttp = new XMLHttpRequest();
+                        xmlHttp.open("PUT", link + "simulation/start", true);
+                        xmlHttp.onreadystatechange = () => {
+                            if (xmlHttp.readyState === 4) {
+                                working = false;
+                                workDiv.setAttribute("hidden", "");
+                            }
+                        };
+                        xmlHttp.setRequestHeader("Content-Type", "application/json");
+                        xmlHttp.send(JSON.stringify(data));
+                    }
+                } else
+                    alert("Work already in progress");
             }
 
             function stopSimulation() {
-                var machines = getSelectedMachines();
-                if (machines.length <= 0)
-                    return;
-                var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("PUT", link + "simulation/stop", true);
-                xmlHttp.setRequestHeader("Content-Type", "application/json");
-                xmlHttp.send(JSON.stringify(machines));
+                if (!working) {
+                    working = true;
+                    workDiv.removeAttribute("hidden");
+                    var machines = getSelectedMachines();
+                    if (machines.length <= 0)
+                        return;
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("PUT", link + "simulation/stop", true);
+                    xmlHttp.onreadystatechange = () => {
+                        if (xmlHttp.readyState === 4) {
+                            working = false;
+                            workDiv.setAttribute("hidden", "");
+                        }
+                    };
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.send(JSON.stringify(machines));
+                } else
+                    alert("Work already in progress");
             }
 
             function update() {
-                var data = getArray();
-                if (data !== null && data.length > 0) {
-                    var xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open("POST", link + "simulation/config/", true);
-                    xmlHttp.setRequestHeader("Content-Type", "application/json");
-                    xmlHttp.send(JSON.stringify(data));
-                }
+                if (!working) {
+                    working = true;
+                    workDiv.removeAttribute("hidden");
+                    var data = getArray();
+                    if (data !== null && data.length > 0) {
+                        var xmlHttp = new XMLHttpRequest();
+                        xmlHttp.onreadystatechange = () => {
+                            if (xmlHttp.readyState === 4) {
+                                working = false;
+                                workDiv.setAttribute("hidden", "");
+                            }
+                        };
+                        xmlHttp.open("POST", link + "simulation/config/", true);
+                        xmlHttp.setRequestHeader("Content-Type", "application/json");
+                        xmlHttp.send(JSON.stringify(data));
+                    }
+                } else
+                    alert("Work already in progress");
+
             }
 
             function getSelectedMachines() {
@@ -156,12 +198,24 @@ and open the template in the editor.
             }
 
             function stopSimulationSession() {
-                if (confirm("It will stop all active machines, even not started by you! Continue?")) {
-                    var xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open("PUT", link + "simulation/stop/active", true);
-                    xmlHttp.setRequestHeader("Content-Type", "application/json");
-                    xmlHttp.send(null);
-                }
+                if (!working) {
+                    working = true;
+                    workDiv.removeAttribute("hidden");
+                    if (confirm("It will stop all active machines, even not started by you! Continue?")) {
+                        var xmlHttp = new XMLHttpRequest();
+                        xmlHttp.open("PUT", link + "simulation/stop/active", true);
+                        xmlHttp.onreadystatechange = () => {
+                            if (xmlHttp.readyState === 4) {
+                                working = false;
+                                workDiv.setAttribute("hidden", "");
+                            }
+                        };
+                        xmlHttp.setRequestHeader("Content-Type", "application/json");
+                        xmlHttp.send(null);
+                    }
+                } else
+                    alert("Work already in progress");
+
             }
 
             function stopAll() {
@@ -175,13 +229,24 @@ and open the template in the editor.
             }
 
             function restart() {
-                var machines = getSelectedMachines();
-                if (machines.length <= 0)
-                    return;
-                var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("PUT", link + "simulation/config/restart", true);
-                xmlHttp.setRequestHeader("Content-Type", "application/json");
-                xmlHttp.send(JSON.stringify(machines));
+                if (!working) {
+                    working = true;
+                    workDiv.removeAttribute("hidden");
+                    var machines = getSelectedMachines();
+                    if (machines.length <= 0)
+                        return;
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.open("PUT", link + "simulation/config/restart", true);
+                    xmlHttp.setRequestHeader("Content-Type", "application/json");
+                    xmlHttp.onreadystatechange = () => {
+                        if (xmlHttp.readyState === 4) {
+                            working = false;
+                            workDiv.setAttribute("hidden", "");
+                        }
+                    };
+                    xmlHttp.send(JSON.stringify(machines));
+                } else
+                    alert("Work already in progress");
             }
 
             var machineList = JSON.parse(httpGet(link + "machine/list"));

@@ -30,6 +30,7 @@ and open the template in the editor.
         <p class="important">Caution: Stop button stops all active machines, even not started by you!</p>
 
         <button onclick="start()">Start</button><button onclick="stop()">Stop</button>
+        <div id="working" class="important tab" hidden>Working . . .</div>
 
         <script>
 
@@ -51,6 +52,8 @@ and open the template in the editor.
             var cycleBreakInput = document.getElementById("cycleBreak");
             var minInput = document.getElementById("minInterval");
             var maxInput = document.getElementById("maxInterval");
+            
+            var workDiv = document.getElementById("working");
 
             var randomCheckbox = document.getElementById("auto-cfg");
 
@@ -110,6 +113,7 @@ and open the template in the editor.
             function start() {
                 if (!working) {
                     working = true;
+                    workDiv.removeAttribute("hidden");
                     var xmlHttp = new XMLHttpRequest();
                     var data = getObject();
                     if (data !== null && countInput.value > 0) {
@@ -119,6 +123,7 @@ and open the template in the editor.
                         xmlHttp.onreadystatechange = () => {
                             if (xmlHttp.readyState === 4) {
                                 working = false;
+                                workDiv.setAttribute("hidden","");
                             }
                         };
                         xmlHttp.setRequestHeader("Content-Type", "application/json");
@@ -131,12 +136,14 @@ and open the template in the editor.
             function stop() {
                 if (!working) {
                     working = true;
+                    workDiv.removeAttribute("hidden");
                     var xmlHttp = new XMLHttpRequest();
                     //xmlHttp.open("PUT", link + "simulation/stop/all", true);
                     xmlHttp.open("PUT", link + "simulation/stop/active", true);
                     xmlHttp.onreadystatechange = () => {
                         if (xmlHttp.readyState === 4) {
                             working = false;
+                            workDiv.setAttribute("hidden","");
                         }
                     };
                     xmlHttp.setRequestHeader("Content-Type", "application/json");
