@@ -45,6 +45,7 @@ public class EventLogBean implements EventLogBeanRemote, EventLogBeanLocal {
 
     @EJB
     private MachineBeanLocal machineBean;
+    
     private static final Logger LOG = Logger.getLogger(EventLogBean.class.getName());
     
     @PostConstruct

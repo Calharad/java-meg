@@ -49,7 +49,7 @@ and open the template in the editor.
 
                 var button = document.createElement("button");
                 button.addEventListener("click", () => changeState(id));
-                button.appendChild(document.createTextNode("STOP"));
+                button.appendChild(document.createTextNode(state === "STOP" ? "START" : "STOP"));
                 button.id = "b" + id;
                 
 
